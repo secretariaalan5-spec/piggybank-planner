@@ -37,7 +37,13 @@ const Goals = () => {
     });
     if (!parsed.success) { toast.error("Verifique os campos da meta"); return; }
     setLoading(true);
-    const { error } = await supabase.from("goals").insert({ user_id: user!.id, ...parsed.data });
+    const { error } = await supabase.from("goals").insert({
+      user_id: user!.id,
+      title: parsed.data.title,
+      target_amount: parsed.data.target_amount,
+      current_amount: parsed.data.current_amount,
+      deadline: parsed.data.deadline ?? null,
+    });
     setLoading(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Meta criada!");
