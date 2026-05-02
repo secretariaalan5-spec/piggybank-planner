@@ -28,7 +28,12 @@ const Insights = () => {
   // Bootstrap: cria 3 dicas iniciais se não houver nenhuma
   useEffect(() => {
     if (!user || insights.length > 0) return;
-    const seed = TIPS.slice(0, 3).map(t => ({ ...t, user_id: user.id, insight_type: t.type }));
+    const seed = TIPS.slice(0, 3).map(t => ({
+      user_id: user.id,
+      title: t.title,
+      content: t.content,
+      insight_type: t.type,
+    }));
     supabase.from("ai_insights").insert(seed).then(() => qc.invalidateQueries({ queryKey: ["insights"] }));
   }, [user, insights.length, qc]);
 
