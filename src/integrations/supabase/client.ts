@@ -2,8 +2,14 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+// A URL e a anon key do Supabase são valores PÚBLICOS por design.
+// A segurança é garantida pelo RLS (Row Level Security) no banco de dados.
+// Referência: https://supabase.com/docs/guides/api/api-keys
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+  ?? "https://jqtlolabtiekqqnxdomf.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+  ?? "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxdGxvbGFidGlla3Fxbnhkb21mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3Mzk2ODksImV4cCI6MjA5MzMxNTY4OX0.G5NHq3H7ba4mVjwrhzXNEOcfTyLHGvdr2mHPZk6SpgE";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
@@ -14,4 +20,4 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     persistSession: true,
     autoRefreshToken: true,
   }
-});
+});
