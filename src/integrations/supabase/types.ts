@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          balance: number
+          color: string
+          created_at: string
+          credit_limit: number | null
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          color?: string
+          created_at?: string
+          credit_limit?: number | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          color?: string
+          created_at?: string
+          credit_limit?: number | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_insights: {
         Row: {
           content: string
@@ -43,6 +85,133 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      bank_accounts: {
+        Row: {
+          balance: number
+          connection_id: string
+          created_at: string
+          currency: string
+          external_id: string
+          id: string
+          last_sync_at: string | null
+          name: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          connection_id: string
+          created_at?: string
+          currency?: string
+          external_id: string
+          id?: string
+          last_sync_at?: string | null
+          name: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          connection_id?: string
+          created_at?: string
+          currency?: string
+          external_id?: string
+          id?: string
+          last_sync_at?: string | null
+          name?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_accounts_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "bank_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_connections: {
+        Row: {
+          created_at: string
+          id: string
+          institution_logo: string | null
+          institution_name: string
+          last_sync_at: string | null
+          link_id: string
+          provider: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          institution_logo?: string | null
+          institution_name: string
+          last_sync_at?: string | null
+          link_id: string
+          provider?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          institution_logo?: string | null
+          institution_name?: string
+          last_sync_at?: string | null
+          link_id?: string
+          provider?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      budgets: {
+        Row: {
+          amount: number
+          category_id: string | null
+          created_at: string
+          id: string
+          month: number
+          user_id: string
+          year: number
+        }
+        Insert: {
+          amount: number
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          month: number
+          user_id: string
+          year: number
+        }
+        Update: {
+          amount?: number
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          month?: number
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budgets_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       categories: {
         Row: {
@@ -142,41 +311,92 @@ export type Database = {
       }
       transactions: {
         Row: {
+          account_id: string | null
           amount: number
+          bank_account_id: string | null
           category_id: string | null
           created_at: string
           date: string
           description: string | null
+          external_id: string | null
           id: string
+          installment_current: number | null
+          installment_total: number | null
+          notes: string | null
+          parent_id: string | null
+          recurrence: string | null
+          recurrence_end: string | null
+          source: string
           type: Database["public"]["Enums"]["category_type"]
           user_id: string
         }
         Insert: {
+          account_id?: string | null
           amount: number
+          bank_account_id?: string | null
           category_id?: string | null
           created_at?: string
           date?: string
           description?: string | null
+          external_id?: string | null
           id?: string
+          installment_current?: number | null
+          installment_total?: number | null
+          notes?: string | null
+          parent_id?: string | null
+          recurrence?: string | null
+          recurrence_end?: string | null
+          source?: string
           type: Database["public"]["Enums"]["category_type"]
           user_id: string
         }
         Update: {
+          account_id?: string | null
           amount?: number
+          bank_account_id?: string | null
           category_id?: string | null
           created_at?: string
           date?: string
           description?: string | null
+          external_id?: string | null
           id?: string
+          installment_current?: number | null
+          installment_total?: number | null
+          notes?: string | null
+          parent_id?: string | null
+          recurrence?: string | null
+          recurrence_end?: string | null
+          source?: string
           type?: Database["public"]["Enums"]["category_type"]
           user_id?: string
         }
         Relationships: [
           {
+            foreignKeyName: "transactions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "transactions_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
             referencedColumns: ["id"]
           },
         ]
@@ -321,3 +541,4 @@ export const Constants = {
     },
   },
 } as const
+

@@ -13,6 +13,7 @@ import Transactions from "./pages/Transactions";
 import Goals from "./pages/Goals";
 import Insights from "./pages/Insights";
 import Settings from "./pages/Settings";
+import Accounts from "./pages/Accounts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -41,6 +42,7 @@ const App = () => (
                 <Route path="transactions" element={<Transactions />} />
                 <Route path="goals" element={<Goals />} />
                 <Route path="insights" element={<Insights />} />
+                <Route path="accounts" element={<Accounts />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
               <Route path="*" element={<NotFound />} />

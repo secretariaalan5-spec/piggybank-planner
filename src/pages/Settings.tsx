@@ -48,9 +48,10 @@ const Settings = () => {
       </section>
 
       <section className="glass border border-border/60 rounded-3xl p-5 shadow-card">
-        <h3 className="font-display font-semibold flex items-center gap-2"><Github className="h-4 w-4" /> Pronto para escalar</h3>
+        <h3 className="font-display font-semibold flex items-center gap-2"><Github className="h-4 w-4" /> Em evolução contínua</h3>
         <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-          Arquitetura preparada para Open Finance via backend intermediário (Belvo) e migração futura para IA real.
+          Em breve: integração com <span className="text-primary font-semibold">WhatsApp</span> para registrar gastos por mensagem
+          e insights gerados por <span className="text-primary font-semibold">IA</span>.
           Todos os dados estão protegidos por <span className="text-primary font-semibold">RLS</span>.
         </p>
       </section>

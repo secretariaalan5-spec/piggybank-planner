@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { Home, ArrowLeftRight, Target, Sparkles, Settings } from "lucide-react";
+import { Home, ArrowLeftRight, Target, Sparkles, Settings, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 import { ReactNode } from "react";
 
@@ -7,7 +7,7 @@ const tabs = [
   { to: "/app", label: "Início", icon: Home, end: true },
   { to: "/app/transactions", label: "Lançamentos", icon: ArrowLeftRight },
   { to: "/app/goals", label: "Metas", icon: Target },
-  { to: "/app/insights", label: "IA", icon: Sparkles },
+  { to: "/app/accounts", label: "Contas", icon: Wallet },
   { to: "/app/settings", label: "Ajustes", icon: Settings },
 ];
 

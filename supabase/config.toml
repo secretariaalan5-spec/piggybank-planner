@@ -1,1 +1,19 @@
-project_id = "yhblcntuhwytrhatkrjp"
+project_id = "jqtlolabtiekqqnxdomf"
+
+[functions.process-receipt]
+enabled = true
+verify_jwt = true
+import_map = "./functions/process-receipt/deno.json"
+entrypoint = "./functions/process-receipt/index.ts"
+
+[functions.parse-message]
+enabled = true
+verify_jwt = true
+import_map = "./functions/parse-message/deno.json"
+entrypoint = "./functions/parse-message/index.ts"
+
+[functions.whatsapp-webhook]
+enabled = true
+verify_jwt = false
+import_map = "./functions/whatsapp-webhook/deno.json"
+entrypoint = "./functions/whatsapp-webhook/index.ts"

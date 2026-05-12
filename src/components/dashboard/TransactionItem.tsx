@@ -7,9 +7,10 @@ interface Props {
   type: "income" | "expense";
   date: string;
   category?: { name: string; icon: string; color: string } | null;
+  account?: { name: string; type: string } | null;
 }
 
-export const TransactionItem = ({ description, amount, type, date, category }: Props) => {
+export const TransactionItem = ({ description, amount, type, date, category, account }: Props) => {
   const Icon = (Icons as any)[category?.icon || "Wallet"] ?? Icons.Wallet;
   const sign = type === "income" ? "+" : "−";
   const tone = type === "income" ? "text-success" : "text-foreground";
@@ -20,9 +21,12 @@ export const TransactionItem = ({ description, amount, type, date, category }: P
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-medium text-sm truncate">{description || category?.name || "Lançamento"}</p>
-        <p className="text-xs text-muted-foreground">{category?.name} · {formatDate(date)}</p>
+        <p className="text-xs text-muted-foreground">
+          {category?.name} {account ? `· ${account.name}` : ""} · {formatDate(date)}
+        </p>
       </div>
       <p className={`font-display font-bold text-sm tabular-nums ${tone}`}>{sign}{formatBRL(Math.abs(amount))}</p>
     </div>
   );
 };
+

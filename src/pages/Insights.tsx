@@ -1,23 +1,12 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useInsights, useTransactions } from "@/hooks/useFinance";
 import { PiggyMascot } from "@/components/PiggyMascot";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
-import { Sparkles, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Sparkles, TrendingDown, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
-
-const TIPS = [
-  { title: "A regra 50/30/20", content: "Tente dividir sua renda em 50% essenciais, 30% lazer e 20% poupança. Comece pelos 20% — pague-se primeiro!", type: "tip" },
-  { title: "Pequenos vazamentos afundam navios", content: "Aquele cafezinho diário pode virar R$ 200/mês. Sem cortar o prazer, troque um por dois na semana.", type: "tip" },
-  { title: "Categoria mais cara revelada", content: "Olhe seu gráfico de gastos. A maior fatia geralmente esconde a maior oportunidade de economia.", type: "alert" },
-  { title: "Meta clara, foco real", content: "Sem meta financeira, todo dinheiro vira gasto. Crie ao menos uma — começar pequeno conta.", type: "tip" },
-  { title: "Automatize o bem", content: "Configure transferências automáticas para sua poupança no dia do salário. Você não vai sentir falta.", type: "tip" },
-  { title: "Compras por impulso?", content: "Use a regra das 24h: queira por um dia inteiro antes de comprar. 70% das vezes você desiste.", type: "tip" },
-  { title: "Renegocie tudo", content: "Internet, plano de celular, streaming. Uma ligação por ano pode te economizar centenas.", type: "tip" },
-];
+import { formatBRL } from "@/lib/format";
 
 const Insights = () => {
   const { user } = useAuth();
@@ -25,43 +14,49 @@ const Insights = () => {
   const { data: insights = [] } = useInsights();
   const { data: transactions = [] } = useTransactions();
 
-  // Bootstrap: cria 3 dicas iniciais se não houver nenhuma
-  useEffect(() => {
-    if (!user || insights.length > 0) return;
-    const seed = TIPS.slice(0, 3).map(t => ({
-      user_id: user.id,
-      title: t.title,
-      content: t.content,
-      insight_type: t.type,
-    }));
-    supabase.from("ai_insights").insert(seed).then(() => qc.invalidateQueries({ queryKey: ["insights"] }));
-  }, [user, insights.length, qc]);
+  // Calcula os dados do mês atual
+  const stats = useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
 
-  const personalized = useMemo(() => {
-    if (transactions.length === 0) return null;
-    const expenses = transactions.filter((t: any) => t.type === "expense");
-    if (expenses.length === 0) return null;
-    const byCat = new Map<string, number>();
-    expenses.forEach((t: any) => {
-      const k = t.categories?.name || "Outros";
-      byCat.set(k, (byCat.get(k) || 0) + Number(t.amount));
+    const monthTx = transactions.filter((t: any) => {
+      // Ajuste de timezone simples para garantir o mês correto
+      const d = new Date(t.date + 'T12:00:00'); 
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
     });
-    const top = Array.from(byCat.entries()).sort((a, b) => b[1] - a[1])[0];
-    return top ? `Sua categoria com mais gastos é "${top[0]}". Que tal definir um teto mensal para ela?` : null;
+
+    const income = monthTx.filter((t: any) => t.type === "income").reduce((acc: number, t: any) => acc + Number(t.amount), 0);
+    const expenses = monthTx.filter((t: any) => t.type === "expense").reduce((acc: number, t: any) => acc + Number(t.amount), 0);
+    
+    // Percentual do salário gasto
+    const spentPercent = income > 0 ? Math.min(Math.round((expenses / income) * 100), 100) : (expenses > 0 ? 100 : 0);
+    const overspent = income > 0 && expenses > income;
+
+    // Agrupa por categoria
+    const byCategory = new Map<string, { total: number, color: string }>();
+    monthTx.filter((t: any) => t.type === "expense").forEach((t: any) => {
+      const name = t.categories?.name || "Outros";
+      const color = t.categories?.color || "#cbd5e1";
+      const current = byCategory.get(name) || { total: 0, color };
+      byCategory.set(name, { total: current.total + Number(t.amount), color });
+    });
+
+    const topCategories = Array.from(byCategory.entries())
+      .sort((a, b) => b[1].total - a[1].total)
+      .slice(0, 3); // Pega os 3 maiores gastos
+
+    return { income, expenses, spentPercent, overspent, topCategories };
   }, [transactions]);
 
-  const generateNew = async () => {
-    if (!user) return;
-    const random = TIPS[Math.floor(Math.random() * TIPS.length)];
-    const { error } = await supabase.from("ai_insights").insert({
-      user_id: user.id,
-      title: random.title,
-      content: personalized || random.content,
-      insight_type: random.type,
-    });
-    if (error) toast.error(error.message);
-    else { toast.success("Nova dica chegou!"); qc.invalidateQueries({ queryKey: ["insights"] }); }
-  };
+  // Gera o conselho dinâmico
+  const aiAdvice = useMemo(() => {
+    if (stats.income === 0 && stats.expenses === 0) return "Adicione seus lançamentos (receitas e despesas) deste mês para eu poder analisar sua saúde financeira.";
+    if (stats.overspent) return "Alerta vermelho! 🚨 Você já gastou mais do que ganhou neste mês. Freie os gastos não essenciais imediatamente.";
+    if (stats.spentPercent > 80) return `Atenção! Você já gastou ${stats.spentPercent}% da sua renda. Evite novas compras no cartão até o mês virar.`;
+    if (stats.spentPercent > 50) return `Você consumiu ${stats.spentPercent}% do orçamento. Seus maiores vilões estão na lista abaixo.`;
+    return `Parabéns! Você gastou apenas ${stats.spentPercent}% da sua renda até agora. Excelente momento para investir a diferença.`;
+  }, [stats]);
 
   const markRead = async (id: string) => {
     await supabase.from("ai_insights").update({ is_read: true }).eq("id", id);
@@ -69,51 +64,109 @@ const Insights = () => {
   };
 
   return (
-    <div className="px-5 pt-6 space-y-5">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight">Pigly IA</h1>
-          <p className="text-sm text-muted-foreground">Conselhos do seu porquinho</p>
-        </div>
-        <Button onClick={generateNew} variant="outline" size="sm" className="rounded-full">
-          <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Nova dica
-        </Button>
+    <div className="px-5 pt-6 pb-10 space-y-6">
+      <header>
+        <h1 className="font-display text-2xl font-bold tracking-tight">Análise Inteligente</h1>
+        <p className="text-sm text-muted-foreground">Resumo do seu mês até agora</p>
       </header>
 
+      {/* Cartão de Saúde Financeira */}
       <div className="relative glass border border-border/60 rounded-3xl p-5 shadow-card overflow-hidden">
-        <div className="absolute -right-6 -bottom-6 opacity-90"><PiggyMascot size={140} /></div>
-        <div className="relative pr-28">
-          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-            <Sparkles className="h-3 w-3" /> Análise rápida
+        <div className="absolute -right-6 -bottom-6 opacity-80 pointer-events-none"><PiggyMascot size={130} /></div>
+        
+        <div className="relative pr-24">
+          <div className="flex items-center gap-2 mb-4">
+            <div className={`h-8 w-8 rounded-full flex items-center justify-center ${stats.overspent ? 'bg-destructive/20 text-destructive' : stats.spentPercent > 80 ? 'bg-amber-500/20 text-amber-500' : 'bg-success/20 text-success'}`}>
+              {stats.overspent ? <AlertTriangle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Saúde do Mês</p>
+              <p className="font-display font-bold text-lg">
+                {stats.spentPercent}% da renda
+              </p>
+            </div>
           </div>
-          <p className="font-display font-semibold mt-3 text-balance leading-snug">
-            {personalized || "Adicione lançamentos para receber análises personalizadas. Começamos com as melhores práticas para você!"}
+
+          <p className="text-sm font-medium leading-relaxed text-balance">
+            {aiAdvice}
           </p>
+        </div>
+
+        {/* Barra de progresso do salário */}
+        <div className="mt-5 relative h-2.5 w-full bg-muted rounded-full overflow-hidden">
+          <motion.div 
+            initial={{ width: 0 }}
+            animate={{ width: `${stats.spentPercent}%` }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className={`absolute top-0 left-0 h-full rounded-full ${stats.overspent ? 'bg-destructive' : stats.spentPercent > 80 ? 'bg-amber-500' : 'gradient-primary'}`}
+          />
+        </div>
+        <div className="flex justify-between mt-2 text-[10px] font-semibold text-muted-foreground uppercase">
+          <span>0%</span>
+          <span>{formatBRL(stats.expenses)} gastos</span>
         </div>
       </div>
 
-      <div className="space-y-3">
-        {insights.map((ins: any, i: number) => (
-          <motion.button
-            key={ins.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.04 }}
-            onClick={() => markRead(ins.id)}
-            className={`w-full text-left glass border rounded-3xl p-5 shadow-card transition ${ins.is_read ? "border-border/40 opacity-80" : "border-primary/30"}`}
-          >
-            <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-2xl gradient-primary flex items-center justify-center shadow-glow shrink-0">
-                <Sparkles className="h-5 w-5 text-primary-foreground" />
+      {/* Maiores Gastos (Ranking) */}
+      {stats.topCategories.length > 0 && (
+        <section className="space-y-3">
+          <h3 className="font-display font-semibold px-1">Onde seu dinheiro foi parar</h3>
+          <div className="glass border border-border/60 rounded-3xl p-4 shadow-card space-y-4">
+            {stats.topCategories.map(([name, data], i) => (
+              <div key={name} className="space-y-1.5">
+                <div className="flex justify-between items-end">
+                  <p className="text-sm font-medium flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: data.color }}></span>
+                    {name}
+                  </p>
+                  <p className="font-display font-bold text-sm tabular-nums text-destructive">
+                    {formatBRL(data.total)}
+                  </p>
+                </div>
+                {/* Minibarra de categoria */}
+                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min((data.total / stats.expenses) * 100, 100)}%` }}
+                    transition={{ duration: 0.8, delay: i * 0.1 }}
+                    className="h-full rounded-full"
+                    style={{ backgroundColor: data.color }}
+                  />
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-display font-semibold">{ins.title}</h3>
-                <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{ins.content}</p>
-              </div>
-            </div>
-          </motion.button>
-        ))}
-      </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Dicas Antigas (Base de dados) */}
+      {insights.length > 0 && (
+        <section className="space-y-3 pt-2">
+          <h3 className="font-display font-semibold px-1">Dicas Extras</h3>
+          <div className="space-y-3">
+            {insights.filter((i: any) => !i.is_read).map((ins: any, i: number) => (
+              <motion.button
+                key={ins.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04 }}
+                onClick={() => markRead(ins.id)}
+                className="w-full text-left glass border border-primary/30 rounded-3xl p-5 shadow-card transition"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="h-10 w-10 rounded-2xl gradient-primary flex items-center justify-center shadow-glow shrink-0">
+                    <Sparkles className="h-5 w-5 text-primary-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-display font-semibold">{ins.title}</h3>
+                    <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{ins.content}</p>
+                  </div>
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 };

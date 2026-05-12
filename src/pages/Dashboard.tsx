@@ -6,6 +6,7 @@ import { SpendingChart } from "@/components/dashboard/SpendingChart";
 import { TransactionItem } from "@/components/dashboard/TransactionItem";
 import { AddTransactionSheet } from "@/components/dashboard/AddTransactionSheet";
 import { PiggyMascot } from "@/components/PiggyMascot";
+import { QuickMessageInput } from "@/components/dashboard/QuickMessageInput";
 import { ChevronRight, Sparkles } from "lucide-react";
 
 const Dashboard = () => {
@@ -46,6 +47,8 @@ const Dashboard = () => {
 
       <BalanceCard balance={stats.balance} income={stats.income} expense={stats.expense} />
 
+      <QuickMessageInput />
+
       {topInsight ? (
         <Link to="/app/insights" className="block glass border border-border/60 rounded-3xl p-4 shadow-card group">
           <div className="flex items-start gap-3">
@@ -78,7 +81,7 @@ const Dashboard = () => {
         ) : (
           <ul className="divide-y divide-border/40">
             {transactions.slice(0, 5).map((t: any) => (
-              <li key={t.id}><TransactionItem description={t.description} amount={Number(t.amount)} type={t.type} date={t.date} category={t.categories} /></li>
+              <li key={t.id}><TransactionItem description={t.description} amount={Number(t.amount)} type={t.type} date={t.date} category={t.categories} account={t.accounts} /></li>
             ))}
           </ul>
         )}
