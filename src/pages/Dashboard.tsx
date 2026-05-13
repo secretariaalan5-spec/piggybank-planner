@@ -1,372 +1,332 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  useTransactions, useProfile, useInsights, useAccounts
-} from "@/hooks/useFinance";
+import { useTransactions, useProfile, useAccounts, useInsights } from "@/hooks/useFinance";
 import { AddTransactionSheet } from "@/components/dashboard/AddTransactionSheet";
 import { QuickMessageInput } from "@/components/dashboard/QuickMessageInput";
 import { TransactionItem } from "@/components/dashboard/TransactionItem";
-import {
-  ChevronLeft, ChevronRight, TrendingUp, TrendingDown,
-  Wallet, Sparkles, ArrowRight, Plus, MessageSquare,
-  BarChart3, PiggyBank
-} from "lucide-react";
 import { formatBRL } from "@/lib/format";
-import { BarChart, Bar, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { Eye, EyeOff } from "lucide-react";
+import {
+  Eye, EyeOff, ChevronLeft, ChevronRight, TrendingUp, TrendingDown,
+  Wallet, Plus, MessageSquare, ArrowRight, Sparkles, Target,
+  PiggyBank, ShoppingCart, Coffee, Car, Home, Zap
+} from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-const MONTHS = [
-  "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
-  "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
-];
+const MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const MONTHS_FULL = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
-const CATEGORY_COLORS = [
-  "#10b981","#3b82f6","#8b5cf6","#f59e0b","#ef4444",
-  "#ec4899","#06b6d4","#f97316","#6366f1","#14b8a6",
-];
+const CAT_ICONS: Record<string, React.ElementType> = {
+  alimentação: Coffee, transporte: Car, moradia: Home,
+  saúde: Zap, assinaturas: Zap, outros: ShoppingCart,
+};
 
-function getGreeting() {
+function greeting() {
   const h = new Date().getHours();
-  if (h < 12) return "Bom dia";
-  if (h < 18) return "Boa tarde";
-  return "Boa noite";
+  return h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
 }
 
-// ── Componente: KPI Card ───────────────────────────────────────────────────────
-interface KpiProps {
-  label: string;
-  value: number;
-  delta?: number;
-  icon: React.ElementType;
-  color: "success" | "destructive" | "primary";
-  hidden: boolean;
-  delay?: number;
-}
-
-const KpiCard = ({ label, value, icon: Icon, color, hidden, delay = 0 }: KpiProps) => {
-  const colorMap = {
-    success:     { bg: "bg-success/10",     text: "text-success",     icon: "text-success"    },
-    destructive: { bg: "bg-destructive/10", text: "text-destructive", icon: "text-destructive"},
-    primary:     { bg: "bg-primary/10",     text: "text-primary",     icon: "text-primary"    },
-  };
-  const c = colorMap[color];
+// ── Card de Categoria ──────────────────────────────────────────────────────────
+const CatCard = ({ name, value, total, color, delay }: {
+  name: string; value: number; total: number; color: string; delay: number;
+}) => {
+  const Icon = CAT_ICONS[name.toLowerCase()] ?? ShoppingCart;
+  const pct = total > 0 ? Math.round((value / total) * 100) : 0;
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.4, ease: [0.32, 0.72, 0.24, 1] }}
-      className="glass border border-border/60 rounded-2xl p-4 shadow-card flex flex-col gap-2"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay, duration: 0.35 }}
+      className="glass border border-border/60 rounded-2xl p-4 shadow-card flex flex-col gap-3"
     >
       <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">{label}</span>
-        <div className={`h-8 w-8 rounded-xl ${c.bg} flex items-center justify-center`}>
-          <Icon className={`h-4 w-4 ${c.icon}`} strokeWidth={2.2} />
+        <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: color + "22" }}>
+          <Icon className="h-4 w-4" style={{ color }} strokeWidth={2.2} />
         </div>
+        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: color + "22", color }}>{pct}%</span>
       </div>
-      <p className={`font-display font-extrabold text-xl tabular-nums ${c.text}`}>
-        {hidden ? "R$ ••••" : formatBRL(value)}
-      </p>
+      <div>
+        <p className="text-xs text-muted-foreground font-medium truncate">{name}</p>
+        <p className="font-display font-bold text-base tabular-nums mt-0.5">{formatBRL(value)}</p>
+      </div>
+      <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ delay: delay + 0.2, duration: 0.8, ease: "easeOut" }}
+          className="h-full rounded-full"
+          style={{ background: color }}
+        />
+      </div>
     </motion.div>
   );
 };
 
-// ── Componente: Gráfico de barras semanal ────────────────────────────────────
-interface DayBar { day: string; income: number; expense: number; }
-const WeeklyChart = ({ bars }: { bars: DayBar[] }) => (
-  <div className="glass border border-border/60 rounded-3xl p-5 shadow-card">
-    <div className="flex items-center justify-between mb-4">
-      <div>
-        <h3 className="font-display font-semibold text-sm">Últimos 7 dias</h3>
-        <p className="text-xs text-muted-foreground mt-0.5">Receitas vs Despesas</p>
-      </div>
-      <BarChart3 className="h-4 w-4 text-muted-foreground" />
-    </div>
-    <ResponsiveContainer width="100%" height={96}>
-      <BarChart data={bars} barGap={2} barCategoryGap="30%">
-        <Tooltip
-          contentStyle={{
-            background: "hsl(var(--popover))",
-            border: "1px solid hsl(var(--border))",
-            borderRadius: 12, fontSize: 11, padding: "6px 10px",
-          }}
-          formatter={(v: number, name: string) => [
-            formatBRL(v),
-            name === "income" ? "Receita" : "Despesa"
-          ]}
-          cursor={false}
-        />
-        <Bar dataKey="income" radius={[4, 4, 0, 0]}>
-          {bars.map((_, i) => <Cell key={i} fill="hsl(var(--success) / 0.7)" />)}
-        </Bar>
-        <Bar dataKey="expense" radius={[4, 4, 0, 0]}>
-          {bars.map((_, i) => <Cell key={i} fill="hsl(var(--destructive) / 0.7)" />)}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
-    <div className="flex items-center gap-4 mt-2">
-      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-        <span className="w-2.5 h-2.5 rounded-sm bg-success/70 inline-block" />
-        Receita
-      </div>
-      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-        <span className="w-2.5 h-2.5 rounded-sm bg-destructive/70 inline-block" />
-        Despesa
-      </div>
-    </div>
-  </div>
-);
-
-// ── Componente: Barra de saúde financeira ────────────────────────────────────
-const HealthBar = ({ income, expense }: { income: number; expense: number }) => {
-  const pct = income > 0 ? Math.min(Math.round((expense / income) * 100), 100) : (expense > 0 ? 100 : 0);
-  const color = pct > 90 ? "bg-destructive" : pct > 70 ? "bg-amber-500" : "bg-success";
-  const label = pct > 90 ? "Atenção" : pct > 70 ? "Moderado" : "Saudável";
-  const labelColor = pct > 90 ? "text-destructive" : pct > 70 ? "text-amber-500" : "text-success";
+// ── Card de Conta ──────────────────────────────────────────────────────────────
+const AccountCard = ({ account }: { account: any }) => {
+  const isCredit = account.type === "credit";
+  const usedPct = isCredit && account.credit_limit > 0
+    ? Math.min(Math.round((Number(account.balance) / Number(account.credit_limit)) * 100), 100)
+    : 0;
   return (
-    <div className="glass border border-border/60 rounded-2xl p-4 shadow-card">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Saúde do mês</span>
-        <span className={`text-xs font-bold ${labelColor}`}>{label} · {pct}%</span>
-      </div>
-      <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className={`h-full rounded-full ${color}`}
-        />
-      </div>
-      <p className="text-[10px] text-muted-foreground mt-2">
-        {income > 0
-          ? `Você usou ${pct}% da sua renda`
-          : "Adicione sua renda para ver a saúde financeira"}
-      </p>
-    </div>
-  );
-};
-
-// ── Componente: Card de contas ────────────────────────────────────────────────
-const AccountsStrip = ({ accounts }: { accounts: any[] }) => {
-  if (!accounts.length) return null;
-  const total = accounts.filter(a => a.type !== "credit").reduce((s, a) => s + Number(a.balance), 0);
-  return (
-    <div className="glass border border-border/60 rounded-2xl px-4 py-3 shadow-card flex items-center gap-3">
-      <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-        <PiggyBank className="h-4.5 w-4.5 text-primary" strokeWidth={2.2} />
+    <div className="glass border border-border/60 rounded-2xl p-4 shadow-card flex items-center gap-3 shrink-0 w-52">
+      <div className="h-10 w-10 rounded-2xl flex items-center justify-center shrink-0"
+        style={{ background: account.color + "22" }}>
+        <Wallet className="h-4.5 w-4.5" style={{ color: account.color }} strokeWidth={2.2} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs text-muted-foreground font-medium">Patrimônio líquido</p>
-        <p className="font-display font-bold text-base tabular-nums">{formatBRL(total)}</p>
+        <p className="text-xs text-muted-foreground font-medium truncate">{account.name}</p>
+        <p className={`font-display font-bold text-sm tabular-nums ${isCredit ? "text-destructive" : "text-success"}`}>
+          {isCredit ? "-" : ""}{formatBRL(Number(account.balance))}
+        </p>
+        {isCredit && account.credit_limit > 0 && (
+          <div className="mt-1.5 h-1 w-full bg-muted rounded-full overflow-hidden">
+            <div className="h-full rounded-full bg-destructive/60" style={{ width: `${usedPct}%` }} />
+          </div>
+        )}
       </div>
-      <Link to="/app/accounts" className="flex items-center gap-1 text-xs text-primary font-semibold">
-        Ver <ArrowRight className="h-3.5 w-3.5" />
-      </Link>
     </div>
   );
 };
 
-// ── Dashboard Principal ───────────────────────────────────────────────────────
+// ── Dashboard ──────────────────────────────────────────────────────────────────
 const Dashboard = () => {
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth());
-  const [year, setYear]   = useState(now.getFullYear());
-  const [hidden, setHidden] = useState(false);
-  const [showAI, setShowAI] = useState(false);
+  const [year,  setYear]  = useState(now.getFullYear());
+  const [hidden, setHidden]  = useState(false);
+  const [showAI, setShowAI]  = useState(false);
 
-  const { data: profile }                = useProfile();
-  const { data: transactions = [] }      = useTransactions();
-  const { data: insights = [] }          = useInsights();
-  const { data: accounts = [] }          = useAccounts();
+  const { data: profile }           = useProfile();
+  const { data: transactions = [] } = useTransactions();
+  const { data: accounts = [] }     = useAccounts();
+  const { data: insights = [] }     = useInsights();
 
-  // Navegar entre meses
-  const prevMonth = () => {
-    if (month === 0) { setMonth(11); setYear(y => y - 1); }
-    else setMonth(m => m - 1);
-  };
-  const nextMonth = () => {
-    if (month === 11) { setMonth(0); setYear(y => y + 1); }
-    else setMonth(m => m + 1);
-  };
-  const isCurrentMonth = month === now.getMonth() && year === now.getFullYear();
+  const prevMonth = () => { if (month === 0) { setMonth(11); setYear(y => y-1); } else setMonth(m => m-1); };
+  const nextMonth = () => { if (month === 11) { setMonth(0); setYear(y => y+1); } else setMonth(m => m+1); };
+  const isCurrent = month === now.getMonth() && year === now.getFullYear();
 
-  // Filtra transações do mês selecionado
   const inMonth = useMemo(() =>
     transactions.filter((t: any) => {
       const d = new Date(t.date + "T12:00:00");
       return d.getMonth() === month && d.getFullYear() === year;
     }), [transactions, month, year]);
 
-  const income  = useMemo(() => inMonth.filter((t: any) => t.type === "income").reduce((s: number, t: any) => s + Number(t.amount), 0), [inMonth]);
+  const income  = useMemo(() => inMonth.filter((t: any) => t.type === "income" ).reduce((s: number, t: any) => s + Number(t.amount), 0), [inMonth]);
   const expense = useMemo(() => inMonth.filter((t: any) => t.type === "expense").reduce((s: number, t: any) => s + Number(t.amount), 0), [inMonth]);
   const balance = income - expense;
 
-  // Últimos 7 dias para gráfico de barras
-  const weekBars: DayBar[] = useMemo(() => {
-    const days = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - (6 - i));
-      return d;
+  // Agrupa por categoria
+  const catSlices = useMemo(() => {
+    const map = new Map<string, { name: string; value: number; color: string }>();
+    inMonth.filter((t: any) => t.type === "expense").forEach((t: any) => {
+      const k = t.categories?.name || "Outros";
+      const cur = map.get(k) || { name: k, value: 0, color: t.categories?.color || "#10b981" };
+      cur.value += Number(t.amount);
+      map.set(k, cur);
     });
-    return days.map(d => {
-      const key = d.toISOString().split("T")[0];
-      const dayTx = transactions.filter((t: any) => t.date === key);
-      return {
-        day: d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", ""),
-        income:  dayTx.filter((t: any) => t.type === "income").reduce((s: number, t: any)  => s + Number(t.amount), 0),
-        expense: dayTx.filter((t: any) => t.type === "expense").reduce((s: number, t: any) => s + Number(t.amount), 0),
-      };
-    });
-  }, [transactions]);
+    return Array.from(map.values()).sort((a, b) => b.value - a.value);
+  }, [inMonth]);
 
+  // Saúde financeira
+  const healthPct = income > 0 ? Math.min(Math.round((expense / income) * 100), 100) : (expense > 0 ? 100 : 0);
+  const healthColor = healthPct > 90 ? "text-destructive" : healthPct > 70 ? "text-amber-500" : "text-success";
+  const healthBg    = healthPct > 90 ? "bg-destructive" : healthPct > 70 ? "bg-amber-500" : "bg-success";
+  const healthLabel = healthPct > 90 ? "Atenção 🚨" : healthPct > 70 ? "Moderado ⚠️" : "Saudável ✅";
+
+  const recentTx = (isCurrent ? transactions : inMonth).slice(0, 5);
   const topInsight = insights[0];
-  const recentTx   = isCurrentMonth ? transactions.slice(0, 6) : inMonth.slice(0, 6);
+  const v = (n: number) => hidden ? "R$ ••••" : formatBRL(n);
 
   return (
-    <div className="px-4 pt-5 pb-32 space-y-4">
+    <div className="px-4 pt-5 pb-32 space-y-5">
 
-      {/* ── Header ── */}
-      <header className="flex items-center justify-between pt-1">
+      {/* ─── Header ─── */}
+      <header className="flex items-center justify-between">
         <div>
-          <p className="text-xs text-muted-foreground font-medium">{getGreeting()},</p>
-          <h1 className="font-display text-2xl font-extrabold tracking-tight leading-tight">
+          <p className="text-xs text-muted-foreground font-medium">{greeting()},</p>
+          <h1 className="font-display text-2xl font-extrabold tracking-tight">
             {profile?.display_name || "amigo(a)"} 👋
           </h1>
         </div>
-        <button
-          onClick={() => setHidden(h => !h)}
-          className="h-10 w-10 rounded-2xl glass border border-border/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition"
-          aria-label="Ocultar valores"
-        >
+        <button onClick={() => setHidden(h => !h)}
+          className="h-10 w-10 rounded-2xl glass border border-border/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition">
           {hidden ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
         </button>
       </header>
 
-      {/* ── Seletor de mês + Saldo ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl gradient-primary p-6 shadow-glow text-primary-foreground"
-      >
-        {/* Blobs decorativos */}
-        <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-white/10 blur-3xl pointer-events-none" />
-        <div className="absolute -left-8 -bottom-16 h-40 w-40 rounded-full bg-black/10 blur-3xl pointer-events-none" />
-
+      {/* ─── Hero Card: Saldo ─── */}
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-3xl gradient-primary p-6 shadow-glow text-primary-foreground">
+        <div className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+        <div className="absolute -left-8 -bottom-12 h-36 w-36 rounded-full bg-black/10 blur-3xl pointer-events-none" />
         <div className="relative z-10">
           {/* Navegação de mês */}
-          <div className="flex items-center justify-between mb-5">
-            <button onClick={prevMonth} className="h-8 w-8 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition">
+          <div className="flex items-center justify-between mb-4">
+            <button onClick={prevMonth} className="h-8 w-8 rounded-xl bg-white/15 flex items-center justify-center hover:bg-white/25 transition">
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <p className="text-sm font-semibold opacity-90 tracking-wide">
-              {MONTHS[month]} {year}
-            </p>
-            <button
-              onClick={nextMonth}
-              disabled={isCurrentMonth}
-              className="h-8 w-8 rounded-xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition disabled:opacity-30"
-            >
+            <p className="text-sm font-semibold opacity-90">{MONTHS_FULL[month]} {year}</p>
+            <button onClick={nextMonth} disabled={isCurrent}
+              className="h-8 w-8 rounded-xl bg-white/15 flex items-center justify-center hover:bg-white/25 transition disabled:opacity-30">
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
 
-          {/* Saldo principal */}
-          <div className="text-center">
+          {/* Saldo */}
+          <div className="text-center mb-5">
             <p className="text-xs opacity-70 uppercase tracking-widest mb-1">Saldo do mês</p>
             <AnimatePresence mode="wait">
-              <motion.p
-                key={`${month}-${year}-${balance}`}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                className="font-display text-4xl font-extrabold tabular-nums"
-              >
+              <motion.p key={`${month}-${year}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                className="font-display text-4xl font-extrabold tabular-nums">
                 {hidden ? "R$ ••••••" : formatBRL(balance)}
               </motion.p>
             </AnimatePresence>
           </div>
 
-          {/* Receita vs Despesa */}
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3">
+          {/* Receita / Despesa */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white/12 backdrop-blur-sm rounded-2xl p-3">
               <div className="flex items-center gap-1.5 text-xs opacity-75 mb-1">
                 <TrendingUp className="h-3.5 w-3.5" /> Receitas
               </div>
-              <p className="font-display font-bold text-lg tabular-nums">
-                {hidden ? "••••" : formatBRL(income)}
-              </p>
+              <p className="font-display font-bold text-lg tabular-nums">{v(income)}</p>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-3">
+            <div className="bg-white/12 backdrop-blur-sm rounded-2xl p-3">
               <div className="flex items-center gap-1.5 text-xs opacity-75 mb-1">
                 <TrendingDown className="h-3.5 w-3.5" /> Despesas
               </div>
-              <p className="font-display font-bold text-lg tabular-nums">
-                {hidden ? "••••" : formatBRL(expense)}
-              </p>
+              <p className="font-display font-bold text-lg tabular-nums">{v(expense)}</p>
             </div>
           </div>
         </div>
       </motion.div>
 
-      {/* ── KPI Cards ── */}
+      {/* ─── Ações Rápidas ─── */}
       <div className="grid grid-cols-2 gap-3">
-        <KpiCard label="Receitas" value={income}  icon={TrendingUp}   color="success"     hidden={hidden} delay={0.05} />
-        <KpiCard label="Despesas" value={expense} icon={TrendingDown} color="destructive" hidden={hidden} delay={0.1}  />
-      </div>
-
-      {/* ── Saúde financeira ── */}
-      <HealthBar income={income} expense={expense} />
-
-      {/* ── Patrimônio ── */}
-      <AccountsStrip accounts={accounts} />
-
-      {/* ── Ações rápidas ── */}
-      <div className="grid grid-cols-2 gap-3">
-        <AddTransactionSheet
-          trigger={
-            <button className="flex items-center justify-center gap-2 h-12 w-full gradient-primary text-primary-foreground rounded-2xl font-semibold text-sm shadow-glow hover:opacity-90 transition">
-              <Plus className="h-4 w-4" />
-              Novo lançamento
-            </button>
-          }
-        />
-        <button
-          onClick={() => setShowAI(a => !a)}
-          className={`flex items-center justify-center gap-2 h-12 w-full rounded-2xl font-semibold text-sm border transition ${
-            showAI
-              ? "gradient-primary text-primary-foreground shadow-glow"
-              : "glass border-border/60 text-foreground hover:border-primary/40"
-          }`}
-        >
-          <MessageSquare className="h-4 w-4" />
-          Registrar por IA
+        <AddTransactionSheet trigger={
+          <button className="flex items-center justify-center gap-2 h-12 w-full gradient-primary text-primary-foreground rounded-2xl font-semibold text-sm shadow-glow hover:opacity-90 active:scale-95 transition-all">
+            <Plus className="h-4 w-4" /> Novo lançamento
+          </button>
+        } />
+        <button onClick={() => setShowAI(a => !a)}
+          className={`flex items-center justify-center gap-2 h-12 w-full rounded-2xl font-semibold text-sm border transition-all active:scale-95 ${
+            showAI ? "gradient-primary text-primary-foreground shadow-glow border-transparent"
+                   : "glass border-border/60 hover:border-primary/40"}`}>
+          <MessageSquare className="h-4 w-4" /> Registrar por IA
         </button>
       </div>
 
-      {/* ── Widget IA (colapsável) ── */}
+      {/* ─── Widget IA ─── */}
       <AnimatePresence>
         {showAI && (
-          <motion.div
-            initial={{ opacity: 0, height: 0, overflow: "hidden" }}
-            animate={{ opacity: 1, height: "auto", overflow: "visible" }}
-            exit={{ opacity: 0, height: 0, overflow: "hidden" }}
-            transition={{ duration: 0.3 }}
-          >
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} style={{ overflow: "hidden" }}>
             <QuickMessageInput />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── Insight da IA ── */}
+      {/* ─── Card: Saúde Financeira ─── */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+        className="glass border border-border/60 rounded-3xl p-5 shadow-card">
+        <div className="flex items-center justify-between mb-1">
+          <div>
+            <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Saúde financeira</p>
+            <p className={`font-display font-bold text-lg mt-0.5 ${healthColor}`}>{healthLabel}</p>
+          </div>
+          <div className="relative w-16 h-16">
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie data={[{ value: healthPct }, { value: 100 - healthPct }]} dataKey="value"
+                  innerRadius={22} outerRadius={30} startAngle={90} endAngle={-270} paddingAngle={0} stroke="none">
+                  <Cell fill={healthPct > 90 ? "hsl(var(--destructive))" : healthPct > 70 ? "#f59e0b" : "hsl(var(--success))"} />
+                  <Cell fill="hsl(var(--muted))" />
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className={`text-[11px] font-extrabold tabular-nums ${healthColor}`}>{healthPct}%</span>
+            </div>
+          </div>
+        </div>
+        <div className="mt-3 h-2 w-full bg-muted rounded-full overflow-hidden">
+          <motion.div initial={{ width: 0 }} animate={{ width: `${healthPct}%` }}
+            transition={{ duration: 1, ease: "easeOut" }} className={`h-full rounded-full ${healthBg}`} />
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-2">
+          {income > 0 ? `Você usou ${v(expense)} de ${v(income)} neste mês` : "Adicione sua renda para acompanhar a saúde financeira"}
+        </p>
+      </motion.div>
+
+      {/* ─── Cards: Categorias de Gasto ─── */}
+      {catSlices.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="font-display font-semibold text-sm">Gastos por categoria</h2>
+              <p className="text-xs text-muted-foreground">{catSlices.length} categorias em {MONTHS[month]}</p>
+            </div>
+            <Link to="/app/insights" className="flex items-center gap-1 text-xs text-primary font-semibold">
+              Ver análise <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {catSlices.slice(0, 6).map((cat, i) => (
+              <CatCard key={cat.name} name={cat.name} value={cat.value} total={expense} color={cat.color} delay={i * 0.05} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ─── Cards: Contas ─── */}
+      {accounts.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="font-display font-semibold text-sm">Minhas contas</h2>
+              <p className="text-xs text-muted-foreground">{accounts.length} conta{accounts.length > 1 ? "s" : ""} ativa{accounts.length > 1 ? "s" : ""}</p>
+            </div>
+            <Link to="/app/accounts" className="flex items-center gap-1 text-xs text-primary font-semibold">
+              Gerenciar <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
+            {accounts.map(acc => <AccountCard key={acc.id} account={acc} />)}
+            {/* Card de adicionar conta */}
+            <Link to="/app/accounts"
+              className="glass border border-dashed border-border/60 rounded-2xl p-4 flex flex-col items-center justify-center gap-1.5 shrink-0 w-40 text-muted-foreground hover:text-primary hover:border-primary/40 transition-all">
+              <Plus className="h-5 w-5" />
+              <span className="text-xs font-semibold">Nova conta</span>
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* ─── Card: Meta rápida ─── */}
+      <Link to="/app/goals"
+        className="block glass border border-border/60 rounded-3xl p-5 shadow-card group hover:border-primary/30 transition-all">
+        <div className="flex items-center gap-3">
+          <div className="h-11 w-11 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+            <Target className="h-5 w-5 text-primary" strokeWidth={2.2} />
+          </div>
+          <div className="flex-1">
+            <p className="text-xs text-muted-foreground font-medium">Metas financeiras</p>
+            <p className="font-display font-semibold text-sm">Acompanhe seus objetivos →</p>
+          </div>
+          <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+        </div>
+      </Link>
+
+      {/* ─── Card: Insight IA ─── */}
       {topInsight && (
-        <Link to="/app/insights" className="block glass border border-primary/30 rounded-3xl p-4 shadow-card group">
+        <Link to="/app/insights" className="block glass border border-primary/25 rounded-3xl p-5 shadow-card group">
           <div className="flex items-start gap-3">
             <div className="h-10 w-10 rounded-2xl gradient-primary flex items-center justify-center shadow-glow shrink-0">
               <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-primary font-bold uppercase tracking-widest">Dica do Pigly</p>
+              <p className="text-[10px] text-primary font-bold uppercase tracking-widest">Dica do Pigly ✨</p>
               <p className="font-display font-semibold text-sm mt-0.5 line-clamp-2">{topInsight.title}</p>
             </div>
             <ArrowRight className="h-4 w-4 text-muted-foreground self-center group-hover:translate-x-1 transition-transform" />
@@ -374,17 +334,12 @@ const Dashboard = () => {
         </Link>
       )}
 
-      {/* ── Gráfico semanal ── */}
-      {isCurrentMonth && <WeeklyChart bars={weekBars} />}
-
-      {/* ── Últimas transações ── */}
+      {/* ─── Card: Últimas Transações ─── */}
       <section className="glass border border-border/60 rounded-3xl shadow-card overflow-hidden">
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <div>
-            <h3 className="font-display font-semibold">
-              {isCurrentMonth ? "Últimas transações" : `Transações · ${MONTHS[month]}`}
-            </h3>
-            <p className="text-xs text-muted-foreground">{recentTx.length} lançamentos</p>
+            <h2 className="font-display font-semibold">Últimas transações</h2>
+            <p className="text-xs text-muted-foreground">{recentTx.length} lançamento{recentTx.length !== 1 ? "s" : ""}</p>
           </div>
           <Link to="/app/transactions" className="flex items-center gap-1 text-xs text-primary font-semibold">
             Ver tudo <ArrowRight className="h-3.5 w-3.5" />
@@ -392,33 +347,25 @@ const Dashboard = () => {
         </div>
 
         {recentTx.length === 0 ? (
-          <div className="px-5 pb-6 text-center">
-            <Wallet className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Nenhuma transação neste período</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Toque em "Novo lançamento" para começar.</p>
+          <div className="px-5 pb-7 text-center">
+            <PiggyBank className="h-12 w-12 text-muted-foreground/25 mx-auto mb-3" strokeWidth={1.5} />
+            <p className="text-sm font-medium text-muted-foreground">Nenhum lançamento ainda</p>
+            <p className="text-xs text-muted-foreground/70 mt-1">Use o botão acima para começar!</p>
           </div>
         ) : (
           <ul className="divide-y divide-border/40 px-5">
             {recentTx.map((t: any) => (
               <li key={t.id}>
-                <TransactionItem
-                  description={t.description}
-                  amount={Number(t.amount)}
-                  type={t.type}
-                  date={t.date}
-                  category={t.categories}
-                  account={t.accounts}
-                />
+                <TransactionItem description={t.description} amount={Number(t.amount)}
+                  type={t.type} date={t.date} category={t.categories} account={t.accounts} />
               </li>
             ))}
           </ul>
         )}
 
         {recentTx.length > 0 && (
-          <Link
-            to="/app/transactions"
-            className="flex items-center justify-center gap-2 py-4 text-xs text-muted-foreground hover:text-primary transition border-t border-border/40"
-          >
+          <Link to="/app/transactions"
+            className="flex items-center justify-center gap-1.5 py-4 text-xs text-muted-foreground hover:text-primary transition border-t border-border/40">
             Ver todas as transações <ArrowRight className="h-3 w-3" />
           </Link>
         )}
