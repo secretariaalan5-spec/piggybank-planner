@@ -56,47 +56,47 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* Dark mode — premium pink fintech */
-    --background: 340 40% 3%;
-    --foreground: 340 20% 96%;
+    /* Dark mode — Deep Neutral Dark with Pink Accents */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
 
-    --card: 340 35% 7%;
-    --card-foreground: 340 20% 96%;
+    --card: 240 10% 6%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 340 40% 6%;
-    --popover-foreground: 340 20% 96%;
+    --popover: 240 10% 5%;
+    --popover-foreground: 0 0% 98%;
 
     --primary: 340 90% 60%;
     --primary-foreground: 340 40% 5%;
     --primary-glow: 340 95% 70%;
 
-    --secondary: 340 25% 12%;
-    --secondary-foreground: 340 20% 96%;
+    --secondary: 240 5% 15%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 340 20% 10%;
-    --muted-foreground: 340 10% 65%;
+    --muted: 240 5% 12%;
+    --muted-foreground: 240 5% 65%;
 
     --accent: 330 85% 55%;
     --accent-foreground: 340 40% 5%;
 
     --success: 142 71% 55%;
-    --success-foreground: 340 40% 5%;
+    --success-foreground: 240 10% 5%;
 
     --destructive: 0 75% 62%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 340 25% 14%;
-    --input: 340 25% 12%;
+    --border: 240 5% 15%;
+    --input: 240 5% 15%;
     --ring: 340 90% 60%;
 
     --gradient-primary: linear-gradient(135deg, hsl(340 90% 60%) 0%, hsl(330 85% 55%) 100%);
-    --gradient-hero: radial-gradient(ellipse at top, hsl(340 80% 20% / 0.4), transparent 60%), linear-gradient(180deg, hsl(340 40% 3%) 0%, hsl(340 35% 6%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(340 35% 9% / 0.9), hsl(340 30% 6% / 0.6));
-    --gradient-mesh: radial-gradient(at 20% 0%, hsl(340 80% 30% / 0.3) 0%, transparent 50%), radial-gradient(at 80% 100%, hsl(330 80% 30% / 0.25) 0%, transparent 50%);
+    --gradient-hero: radial-gradient(ellipse at top, hsl(340 90% 60% / 0.08), transparent 60%), linear-gradient(180deg, hsl(240 10% 3.9%) 0%, hsl(240 10% 6%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(240 10% 8% / 0.9), hsl(240 10% 5% / 0.6));
+    --gradient-mesh: radial-gradient(at 20% 0%, hsl(340 90% 60% / 0.1) 0%, transparent 50%), radial-gradient(at 80% 100%, hsl(330 85% 55% / 0.05) 0%, transparent 50%);
 
-    --shadow-glow: 0 20px 80px -20px hsl(340 90% 60% / 0.5);
+    --shadow-glow: 0 20px 80px -20px hsl(340 90% 60% / 0.35);
     --shadow-card: 0 8px 32px -8px hsl(0 0% 0% / 0.5);
-    --shadow-elevated: 0 24px 64px -16px hsl(0 0% 0% / 0.6);
+    --shadow-elevated: 0 24px 64px -16px hsl(0 0% 0% / 0.7);
   }
 }
 
