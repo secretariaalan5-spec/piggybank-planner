@@ -8,93 +8,93 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Light mode — soft emerald */
-    --background: 142 30% 98%;
-    --foreground: 142 30% 10%;
+    /* Light mode — Clean & Crisp */
+    --background: 0 0% 98%;
+    --foreground: 240 10% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 142 30% 10%;
+    --card-foreground: 240 10% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 142 30% 10%;
+    --popover-foreground: 240 10% 10%;
 
-    --primary: 142 71% 45%;
+    --primary: 142 71% 45%; /* Emerald */
     --primary-foreground: 142 100% 98%;
     --primary-glow: 142 70% 55%;
 
-    --secondary: 142 40% 96%;
-    --secondary-foreground: 142 30% 15%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 10% 15%;
 
-    --muted: 142 20% 94%;
-    --muted-foreground: 142 12% 42%;
+    --muted: 240 5% 94%;
+    --muted-foreground: 240 5% 45%;
 
-    --accent: 160 84% 39%;
-    --accent-foreground: 160 100% 98%;
+    --accent: 142 71% 45%;
+    --accent-foreground: 142 100% 98%;
 
     --success: 142 71% 45%;
     --success-foreground: 142 100% 8%;
 
-    --destructive: 0 78% 58%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 142 18% 88%;
-    --input: 142 18% 90%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
     --ring: 142 71% 45%;
 
     --radius: 1.25rem;
 
-    --gradient-primary: linear-gradient(135deg, hsl(142 71% 45%) 0%, hsl(160 84% 39%) 100%);
-    --gradient-hero: radial-gradient(ellipse at top, hsl(142 60% 25% / 0.15), transparent 60%), linear-gradient(180deg, hsl(142 30% 98%) 0%, hsl(142 40% 94%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100% / 0.9), hsl(142 40% 96% / 0.6));
-    --gradient-mesh: radial-gradient(at 20% 0%, hsl(142 84% 60% / 0.15) 0%, transparent 50%), radial-gradient(at 80% 100%, hsl(160 84% 50% / 0.15) 0%, transparent 50%);
+    --gradient-primary: linear-gradient(135deg, hsl(142 71% 45%) 0%, hsl(150 80% 40%) 100%);
+    --gradient-hero: radial-gradient(ellipse at top, hsl(142 71% 45% / 0.08), transparent 60%), linear-gradient(180deg, hsl(0 0% 98%) 0%, hsl(0 0% 95%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100% / 0.9), hsl(0 0% 98% / 0.6));
+    --gradient-mesh: radial-gradient(at 20% 0%, hsl(142 71% 45% / 0.08) 0%, transparent 50%), radial-gradient(at 80% 100%, hsl(150 80% 40% / 0.05) 0%, transparent 50%);
 
-    --shadow-glow: 0 20px 60px -20px hsl(142 71% 45% / 0.4);
-    --shadow-card: 0 4px 24px -8px hsl(142 50% 20% / 0.08);
-    --shadow-elevated: 0 24px 48px -16px hsl(142 50% 20% / 0.12);
+    --shadow-glow: 0 20px 60px -20px hsl(142 71% 45% / 0.3);
+    --shadow-card: 0 4px 20px -8px hsl(240 10% 10% / 0.05);
+    --shadow-elevated: 0 24px 48px -16px hsl(240 10% 10% / 0.1);
 
     --transition-smooth: cubic-bezier(0.32, 0.72, 0.24, 1);
   }
 
   .dark {
-    /* Dark mode — Deep Green/Emerald */
-    --background: 142 20% 5%;
-    --foreground: 142 20% 96%;
+    /* Dark mode — True Neutral Dark (Comfortable to the eyes) */
+    --background: 240 5% 6%;
+    --foreground: 0 0% 98%;
 
-    --card: 142 20% 7%;
-    --card-foreground: 142 20% 96%;
+    --card: 240 5% 9%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 142 20% 6%;
-    --popover-foreground: 142 20% 96%;
+    --popover: 240 5% 9%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 142 70% 50%;
-    --primary-foreground: 142 40% 5%;
+    --primary: 142 70% 50%; /* Vibrant Emerald */
+    --primary-foreground: 142 50% 5%;
     --primary-glow: 142 75% 60%;
 
-    --secondary: 142 15% 15%;
-    --secondary-foreground: 142 20% 96%;
+    --secondary: 240 5% 15%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 142 15% 12%;
-    --muted-foreground: 142 10% 65%;
+    --muted: 240 5% 15%;
+    --muted-foreground: 240 5% 65%;
 
-    --accent: 160 70% 50%;
-    --accent-foreground: 142 40% 5%;
+    --accent: 142 70% 50%;
+    --accent-foreground: 142 50% 5%;
 
-    --success: 142 71% 55%;
-    --success-foreground: 142 40% 5%;
+    --success: 142 70% 50%;
+    --success-foreground: 142 50% 5%;
 
     --destructive: 0 75% 62%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 142 15% 15%;
-    --input: 142 15% 15%;
+    --border: 240 5% 18%;
+    --input: 240 5% 18%;
     --ring: 142 70% 50%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(142 70% 50%) 0%, hsl(160 70% 50%) 100%);
-    --gradient-hero: radial-gradient(ellipse at top, hsl(142 70% 50% / 0.12), transparent 60%), linear-gradient(180deg, hsl(142 20% 5%) 0%, hsl(142 20% 7%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(142 20% 8% / 0.9), hsl(142 20% 6% / 0.6));
-    --gradient-mesh: radial-gradient(at 20% 0%, hsl(142 70% 50% / 0.15) 0%, transparent 50%), radial-gradient(at 80% 100%, hsl(160 70% 50% / 0.1) 0%, transparent 50%);
+    --gradient-primary: linear-gradient(135deg, hsl(142 70% 50%) 0%, hsl(150 75% 45%) 100%);
+    --gradient-hero: radial-gradient(ellipse at top, hsl(142 70% 50% / 0.05), transparent 60%), linear-gradient(180deg, hsl(240 5% 6%) 0%, hsl(240 5% 8%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(240 5% 10% / 0.9), hsl(240 5% 8% / 0.6));
+    --gradient-mesh: radial-gradient(at 20% 0%, hsl(142 70% 50% / 0.08) 0%, transparent 50%), radial-gradient(at 80% 100%, hsl(150 75% 45% / 0.05) 0%, transparent 50%);
 
-    --shadow-glow: 0 20px 80px -20px hsl(142 70% 50% / 0.4);
+    --shadow-glow: 0 20px 80px -20px hsl(142 70% 50% / 0.25);
     --shadow-card: 0 8px 32px -8px hsl(0 0% 0% / 0.5);
     --shadow-elevated: 0 24px 64px -16px hsl(0 0% 0% / 0.6);
   }
