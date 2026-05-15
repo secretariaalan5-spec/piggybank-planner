@@ -66,7 +66,7 @@ export const TransactionItem = ({ id, description, amount, type, date, category,
         </div>
 
         {/* Botão de excluir que entra junto com o swipe */}
-        <div className="absolute left-[100%] inset-y-1 w-20 bg-destructive flex items-center justify-center rounded-xl ml-2">
+        <div className="absolute left-[calc(100%+24px)] inset-y-1 w-20 bg-destructive flex items-center justify-center rounded-xl">
           <Icons.Trash2 className="h-5 w-5 text-destructive-foreground" />
         </div>
       </motion.div>
