@@ -25,8 +25,8 @@ export const AppLayout = ({ children }: { children?: ReactNode }) => {
             {children ?? <Outlet />}
           </motion.div>
         </main>
-        <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none pb-[env(safe-area-inset-bottom)]">
-          <div className="pointer-events-auto w-full max-w-[480px] bg-background/80 backdrop-blur-2xl border-t border-border/60 px-4 py-2">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pointer-events-none">
+          <div className="pointer-events-auto w-full max-w-[480px] bg-background/80 backdrop-blur-2xl border-t border-border/60 px-4 pt-2 pb-[max(env(safe-area-inset-bottom),_0.75rem)]">
             <ul className="flex justify-between items-center">
               {tabs.map(({ to, label, icon: Icon, end }) => (
                 <li key={to} className="flex-1">

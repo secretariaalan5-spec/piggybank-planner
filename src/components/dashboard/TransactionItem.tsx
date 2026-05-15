@@ -35,12 +35,7 @@ export const TransactionItem = ({ id, description, amount, type, date, category,
   };
 
   return (
-    <div className="relative overflow-hidden group">
-      {/* Fundo vermelho com lixeira (revelado ao arrastar) */}
-      <div className="absolute inset-y-0 right-0 w-24 bg-red-500 flex items-center justify-end pr-5 rounded-r-xl">
-        <Icons.Trash2 className="h-5 w-5 text-white" />
-      </div>
-
+    <div className="relative overflow-hidden group -mx-4 px-4">
       {/* Item real (arrastável) */}
       <motion.div
         drag="x"
@@ -48,25 +43,32 @@ export const TransactionItem = ({ id, description, amount, type, date, category,
         onDragEnd={handleDragEnd}
         animate={controls}
         whileTap={{ cursor: "grabbing" }}
-        className="relative bg-background flex items-center gap-3 py-3 px-1 cursor-grab"
+        className="relative flex items-center w-full"
       >
-        <div className="h-11 w-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: `${category?.color || "#10b981"}22`, color: category?.color || "#10b981" }}>
-          <Icon className="h-5 w-5" strokeWidth={2.2} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="font-medium text-sm truncate">{description?.split(' (')[0] || category?.name || "Lançamento"}</p>
-            {isParcel && (
-              <span className="text-[9px] font-bold px-1.5 py-0.5 bg-muted text-muted-foreground rounded-md uppercase tracking-tighter">
-                {installment_current}/{installment_total}
-              </span>
-            )}
+        <div className="flex-1 flex items-center gap-3 py-3 px-1 cursor-grab">
+          <div className="h-11 w-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: `${category?.color || "#10b981"}22`, color: category?.color || "#10b981" }}>
+            <Icon className="h-5 w-5" strokeWidth={2.2} />
           </div>
-          <p className="text-xs text-muted-foreground">
-            {category?.name} {account ? `· ${account.name}` : ""} · {formatDate(date)}
-          </p>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="font-medium text-sm truncate">{description?.split(' (')[0] || category?.name || "Lançamento"}</p>
+              {isParcel && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 bg-muted text-muted-foreground rounded-md uppercase tracking-tighter">
+                  {installment_current}/{installment_total}
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {category?.name} {account ? `· ${account.name}` : ""} · {formatDate(date)}
+            </p>
+          </div>
+          <p className={`font-display font-bold text-sm tabular-nums ${tone}`}>{sign}{formatBRL(Math.abs(amount))}</p>
         </div>
-        <p className={`font-display font-bold text-sm tabular-nums ${tone}`}>{sign}{formatBRL(Math.abs(amount))}</p>
+
+        {/* Botão de excluir que entra junto com o swipe */}
+        <div className="absolute left-[100%] inset-y-1 w-20 bg-destructive flex items-center justify-center rounded-xl ml-2">
+          <Icons.Trash2 className="h-5 w-5 text-destructive-foreground" />
+        </div>
       </motion.div>
     </div>
   );
