@@ -58,7 +58,18 @@ const Transactions = () => {
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">{formatLongDate(date)}</p>
               <ul className="divide-y divide-border/40">
                 {items.map((t: any) => (
-                  <li key={t.id}><TransactionItem description={t.description} amount={Number(t.amount)} type={t.type} date={t.date} category={t.categories} account={t.accounts} /></li>
+                  <li key={t.id}>
+                    <TransactionItem 
+                      description={t.description} 
+                      amount={Number(t.amount)} 
+                      type={t.type} 
+                      date={t.date} 
+                      category={t.categories} 
+                      account={t.accounts} 
+                      installment_total={t.installment_total}
+                      installment_current={t.installment_current}
+                    />
+                  </li>
                 ))}
               </ul>
             </section>

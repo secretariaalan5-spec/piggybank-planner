@@ -7,9 +7,9 @@ import { QuickMessageInput } from "@/components/dashboard/QuickMessageInput";
 import { TransactionItem } from "@/components/dashboard/TransactionItem";
 import { formatBRL } from "@/lib/format";
 import {
-  Eye, EyeOff, ChevronLeft, ChevronRight, TrendingUp, TrendingDown,
+  Bell, Eye, EyeOff, ChevronLeft, ChevronRight, TrendingUp, TrendingDown,
   Wallet, Plus, MessageSquare, ArrowRight, Sparkles, Target,
-  PiggyBank, ShoppingCart, Coffee, Car, Home, Zap
+  PiggyBank, ShoppingCart, Coffee, Car, Home, Zap, ArrowLeftRight
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
@@ -21,71 +21,45 @@ const CAT_ICONS: Record<string, React.ElementType> = {
   saúde: Zap, assinaturas: Zap, outros: ShoppingCart,
 };
 
-function greeting() {
-  const h = new Date().getHours();
-  return h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
-}
-
 // ── Card de Categoria ──────────────────────────────────────────────────────────
 const CatCard = ({ name, value, total, color, delay }: {
   name: string; value: number; total: number; color: string; delay: number;
 }) => {
   const Icon = CAT_ICONS[name.toLowerCase()] ?? ShoppingCart;
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+  
+  // Lógica simplificada para "nível crítico" apenas visual
+  const isCritical = pct > 40; 
+  
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay, duration: 0.35 }}
-      className="glass border border-border/60 rounded-2xl p-4 shadow-card flex flex-col gap-3"
+      className="bg-white rounded-[20px] p-4 border border-slate-100 shadow-sm flex flex-col gap-3"
     >
-      <div className="flex items-center justify-between">
-        <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: color + "22" }}>
-          <Icon className="h-4 w-4" style={{ color }} strokeWidth={2.2} />
-        </div>
-        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: color + "22", color }}>{pct}%</span>
+      <div className="h-11 w-11 rounded-full flex items-center justify-center mb-1" style={{ background: color + "22" }}>
+        <Icon className="h-5 w-5" style={{ color }} strokeWidth={2.5} />
       </div>
       <div>
-        <p className="text-xs text-muted-foreground font-medium truncate">{name}</p>
-        <p className="font-display font-bold text-base tabular-nums mt-0.5">{formatBRL(value)}</p>
+        <p className="text-[13px] text-muted-foreground font-medium truncate mb-1">{name}</p>
+        <p className="font-display font-bold text-[22px] tracking-tight text-slate-800">{formatBRL(value)}</p>
       </div>
-      <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ delay: delay + 0.2, duration: 0.8, ease: "easeOut" }}
-          className="h-full rounded-full"
-          style={{ background: color }}
-        />
+      <div className="mt-2">
+        <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden mb-2">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${pct}%` }}
+            transition={{ delay: delay + 0.2, duration: 0.8, ease: "easeOut" }}
+            className="h-full rounded-full"
+            style={{ background: isCritical ? "#ff4d4f" : color }}
+          />
+        </div>
+        <p className={`text-[11px] font-medium ${isCritical ? 'text-red-500' : 'text-slate-400'}`}>
+          {isCritical ? "Nível crítico" : `${pct}% do total`}
+        </p>
       </div>
     </motion.div>
-  );
-};
-
-// ── Card de Conta ──────────────────────────────────────────────────────────────
-const AccountCard = ({ account }: { account: any }) => {
-  const isCredit = account.type === "credit";
-  const usedPct = isCredit && account.credit_limit > 0
-    ? Math.min(Math.round((Number(account.balance) / Number(account.credit_limit)) * 100), 100)
-    : 0;
-  return (
-    <div className="glass border border-border/60 rounded-2xl p-4 shadow-card flex items-center gap-3 shrink-0 w-52">
-      <div className="h-10 w-10 rounded-2xl flex items-center justify-center shrink-0"
-        style={{ background: account.color + "22" }}>
-        <Wallet className="h-4.5 w-4.5" style={{ color: account.color }} strokeWidth={2.2} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-xs text-muted-foreground font-medium truncate">{account.name}</p>
-        <p className={`font-display font-bold text-sm tabular-nums ${isCredit ? "text-destructive" : "text-success"}`}>
-          {isCredit ? "-" : ""}{formatBRL(Number(account.balance))}
-        </p>
-        {isCredit && account.credit_limit > 0 && (
-          <div className="mt-1.5 h-1 w-full bg-muted rounded-full overflow-hidden">
-            <div className="h-full rounded-full bg-destructive/60" style={{ width: `${usedPct}%` }} />
-          </div>
-        )}
-      </div>
-    </div>
   );
 };
 
@@ -95,15 +69,10 @@ const Dashboard = () => {
   const [month, setMonth] = useState(now.getMonth());
   const [year,  setYear]  = useState(now.getFullYear());
   const [hidden, setHidden]  = useState(false);
-  const [showAI, setShowAI]  = useState(false);
 
   const { data: profile }           = useProfile();
   const { data: transactions = [] } = useTransactions();
-  const { data: accounts = [] }     = useAccounts();
-  const { data: insights = [] }     = useInsights();
 
-  const prevMonth = () => { if (month === 0) { setMonth(11); setYear(y => y-1); } else setMonth(m => m-1); };
-  const nextMonth = () => { if (month === 11) { setMonth(0); setYear(y => y+1); } else setMonth(m => m+1); };
   const isCurrent = month === now.getMonth() && year === now.getFullYear();
 
   const inMonth = useMemo(() =>
@@ -128,248 +97,149 @@ const Dashboard = () => {
     return Array.from(map.values()).sort((a, b) => b.value - a.value);
   }, [inMonth]);
 
-  // Saúde financeira
-  const healthPct = income > 0 ? Math.min(Math.round((expense / income) * 100), 100) : (expense > 0 ? 100 : 0);
-  const healthColor = healthPct > 90 ? "text-destructive" : healthPct > 70 ? "text-amber-500" : "text-success";
-  const healthBg    = healthPct > 90 ? "bg-destructive" : healthPct > 70 ? "bg-amber-500" : "bg-success";
-  const healthLabel = healthPct > 90 ? "Atenção 🚨" : healthPct > 70 ? "Moderado ⚠️" : "Saudável ✅";
-
-  const recentTx = (isCurrent ? transactions : inMonth).slice(0, 5);
-  const topInsight = insights[0];
   const v = (n: number) => hidden ? "R$ ••••" : formatBRL(n);
 
   return (
-    <div className="px-4 pt-5 pb-32 space-y-5">
+    <div className="px-5 pt-6 pb-32 space-y-8 bg-slate-50 min-h-screen">
 
       {/* ─── Header ─── */}
       <header className="flex items-center justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground font-medium">{greeting()},</p>
-          <h1 className="font-display text-2xl font-extrabold tracking-tight">
-            {profile?.display_name || "amigo(a)"} 👋
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center overflow-hidden border border-emerald-200">
+            <PiggyBank className="h-6 w-6 text-emerald-600" />
+          </div>
+          <h1 className="font-display text-xl font-bold text-emerald-800">
+            Olá, {profile?.display_name?.split(' ')[0] || "Economizador"}!
           </h1>
         </div>
-        <button onClick={() => setHidden(h => !h)}
-          className="h-10 w-10 rounded-2xl glass border border-border/60 flex items-center justify-center text-muted-foreground hover:text-foreground transition">
-          {hidden ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+        <button className="h-10 w-10 flex items-center justify-center text-emerald-800 hover:bg-emerald-100 rounded-full transition">
+          <Bell className="h-5 w-5" />
         </button>
       </header>
 
       {/* ─── Hero Card: Saldo ─── */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl gradient-primary p-6 shadow-glow text-primary-foreground">
-        <div className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-white/10 blur-3xl pointer-events-none" />
-        <div className="absolute -left-8 -bottom-12 h-36 w-36 rounded-full bg-black/10 blur-3xl pointer-events-none" />
-        <div className="relative z-10">
-          {/* Navegação de mês */}
-          <div className="flex items-center justify-between mb-4">
-            <button onClick={prevMonth} className="h-8 w-8 rounded-xl bg-white/15 flex items-center justify-center hover:bg-white/25 transition">
-              <ChevronLeft className="h-4 w-4" />
+        className="bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm">
+        
+        {/* Saldo Total */}
+        <div className="mb-6 relative">
+          <p className="text-[13px] text-slate-500 font-medium mb-1 flex justify-between items-center">
+            Saldo Total
+            <button onClick={() => setHidden(h => !h)} className="text-slate-400 hover:text-slate-600">
+              {hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
-            <p className="text-sm font-semibold opacity-90">{MONTHS_FULL[month]} {year}</p>
-            <button onClick={nextMonth} disabled={isCurrent}
-              className="h-8 w-8 rounded-xl bg-white/15 flex items-center justify-center hover:bg-white/25 transition disabled:opacity-30">
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
+          </p>
+          <AnimatePresence mode="wait">
+            <motion.p key={`${month}-${year}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+              className="font-display text-[40px] font-extrabold tracking-tight text-slate-900">
+              {hidden ? "R$ ••••••" : formatBRL(balance)}
+            </motion.p>
+          </AnimatePresence>
+        </div>
 
-          {/* Saldo */}
-          <div className="text-center mb-5">
-            <p className="text-xs opacity-70 uppercase tracking-widest mb-1">Saldo do mês</p>
-            <AnimatePresence mode="wait">
-              <motion.p key={`${month}-${year}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-                className="font-display text-4xl font-extrabold tabular-nums">
-                {hidden ? "R$ ••••••" : formatBRL(balance)}
-              </motion.p>
-            </AnimatePresence>
+        {/* Receita / Despesa */}
+        <div className="grid grid-cols-2 gap-3 mt-2">
+          <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100/50">
+            <p className="text-[12px] text-emerald-700/80 font-medium mb-1">Renda Mensal</p>
+            <p className="font-display font-bold text-lg text-emerald-800">{v(income)}</p>
           </div>
-
-          {/* Receita / Despesa */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white/12 backdrop-blur-sm rounded-2xl p-3">
-              <div className="flex items-center gap-1.5 text-xs opacity-75 mb-1">
-                <TrendingUp className="h-3.5 w-3.5" /> Receitas
-              </div>
-              <p className="font-display font-bold text-lg tabular-nums">{v(income)}</p>
-            </div>
-            <div className="bg-white/12 backdrop-blur-sm rounded-2xl p-3">
-              <div className="flex items-center gap-1.5 text-xs opacity-75 mb-1">
-                <TrendingDown className="h-3.5 w-3.5" /> Despesas
-              </div>
-              <p className="font-display font-bold text-lg tabular-nums">{v(expense)}</p>
-            </div>
+          <div className="bg-rose-50 rounded-xl p-3 border border-rose-100/50">
+            <p className="text-[12px] text-rose-700/80 font-medium mb-1">Gasto Mensal</p>
+            <p className="font-display font-bold text-lg text-rose-800">{v(expense)}</p>
           </div>
         </div>
       </motion.div>
+
+      {/* ─── Resumo Simples ─── */}
+      {balance > 0 && (
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+          className="bg-emerald-50 rounded-[20px] p-5 border border-emerald-100 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0">
+            <Sparkles className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-[13px] text-emerald-800 font-bold mb-0.5">Ótimo trabalho!</p>
+            <p className="text-xs text-emerald-700/80 leading-relaxed">
+              Você já economizou <span className="font-bold">{formatBRL(balance)}</span> este mês. Continue assim!
+            </p>
+          </div>
+        </motion.div>
+      )}
 
       {/* ─── Ações Rápidas ─── */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="flex gap-3">
         <AddTransactionSheet trigger={
-          <button className="flex items-center justify-center gap-2 h-12 w-full gradient-primary text-primary-foreground rounded-2xl font-semibold text-sm shadow-glow hover:opacity-90 active:scale-95 transition-all">
-            <Plus className="h-4 w-4" /> Novo lançamento
+          <button className="flex-1 flex items-center justify-center gap-2 h-12 bg-slate-900 text-white rounded-[20px] font-medium text-sm shadow-md active:scale-95 transition-all">
+            <Plus className="h-4 w-4" /> Novo
           </button>
         } />
-        <button onClick={() => setShowAI(a => !a)}
-          className={`flex items-center justify-center gap-2 h-12 w-full rounded-2xl font-semibold text-sm border transition-all active:scale-95 ${
-            showAI ? "gradient-primary text-primary-foreground shadow-glow border-transparent"
-                   : "glass border-border/60 hover:border-primary/40"}`}>
-          <MessageSquare className="h-4 w-4" /> Registrar por IA
-        </button>
+        <Link to="/app/transactions" className="flex-1 flex items-center justify-center gap-2 h-12 bg-white text-slate-700 border border-slate-200 rounded-[20px] font-medium text-sm shadow-sm active:scale-95 transition-all">
+           Ver todas
+        </Link>
       </div>
 
-      {/* ─── Widget IA ─── */}
-      <AnimatePresence>
-        {showAI && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} style={{ overflow: "hidden" }}>
-            <QuickMessageInput />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ─── Card: Saúde Financeira ─── */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        className="glass border border-border/60 rounded-3xl p-5 shadow-card">
-        <div className="flex items-center justify-between mb-1">
-          <div>
-            <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Saúde financeira</p>
-            <p className={`font-display font-bold text-lg mt-0.5 ${healthColor}`}>{healthLabel}</p>
-          </div>
-          <div className="relative w-16 h-16">
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie data={[{ value: healthPct }, { value: 100 - healthPct }]} dataKey="value"
-                  innerRadius={22} outerRadius={30} startAngle={90} endAngle={-270} paddingAngle={0} stroke="none">
-                  <Cell fill={healthPct > 90 ? "hsl(var(--destructive))" : healthPct > 70 ? "#f59e0b" : "hsl(var(--success))"} />
-                  <Cell fill="hsl(var(--muted))" />
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className={`text-[11px] font-extrabold tabular-nums ${healthColor}`}>{healthPct}%</span>
-            </div>
-          </div>
-        </div>
-        <div className="mt-3 h-2 w-full bg-muted rounded-full overflow-hidden">
-          <motion.div initial={{ width: 0 }} animate={{ width: `${healthPct}%` }}
-            transition={{ duration: 1, ease: "easeOut" }} className={`h-full rounded-full ${healthBg}`} />
-        </div>
-        <p className="text-[10px] text-muted-foreground mt-2">
-          {income > 0 ? `Você usou ${v(expense)} de ${v(income)} neste mês` : "Adicione sua renda para acompanhar a saúde financeira"}
-        </p>
-      </motion.div>
-
       {/* ─── Cards: Categorias de Gasto ─── */}
-      {catSlices.length > 0 && (
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h2 className="font-display font-semibold text-sm">Gastos por categoria</h2>
-              <p className="text-xs text-muted-foreground">{catSlices.length} categorias em {MONTHS[month]}</p>
-            </div>
-            <Link to="/app/insights" className="flex items-center gap-1 text-xs text-primary font-semibold">
-              Ver análise <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+      <section>
+        <div className="flex items-center justify-between mb-5 px-1">
+          <h2 className="font-display text-[19px] font-bold text-slate-800">Gastos por Categoria</h2>
+          <Link to="/app/insights" className="text-[13px] text-emerald-600 font-bold hover:text-emerald-700">
+            Ver Tudo
+          </Link>
+        </div>
+        
+        {catSlices.length === 0 ? (
+          <div className="bg-white rounded-[20px] p-8 text-center shadow-sm border border-slate-100">
+            <PiggyBank className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-500 text-sm font-medium">Nenhum gasto registrado este mês.</p>
           </div>
+        ) : (
           <div className="grid grid-cols-2 gap-3">
-            {catSlices.slice(0, 6).map((cat, i) => (
+            {catSlices.slice(0, 4).map((cat, i) => (
               <CatCard key={cat.name} name={cat.name} value={cat.value} total={expense} color={cat.color} delay={i * 0.05} />
             ))}
           </div>
-        </section>
-      )}
-
-      {/* ─── Cards: Contas ─── */}
-      {accounts.length > 0 && (
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h2 className="font-display font-semibold text-sm">Minhas contas</h2>
-              <p className="text-xs text-muted-foreground">{accounts.length} conta{accounts.length > 1 ? "s" : ""} ativa{accounts.length > 1 ? "s" : ""}</p>
-            </div>
-            <Link to="/app/accounts" className="flex items-center gap-1 text-xs text-primary font-semibold">
-              Gerenciar <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
-            {accounts.map(acc => <AccountCard key={acc.id} account={acc} />)}
-            {/* Card de adicionar conta */}
-            <Link to="/app/accounts"
-              className="glass border border-dashed border-border/60 rounded-2xl p-4 flex flex-col items-center justify-center gap-1.5 shrink-0 w-40 text-muted-foreground hover:text-primary hover:border-primary/40 transition-all">
-              <Plus className="h-5 w-5" />
-              <span className="text-xs font-semibold">Nova conta</span>
-            </Link>
-          </div>
-        </section>
-      )}
-
-      {/* ─── Card: Meta rápida ─── */}
-      <Link to="/app/goals"
-        className="block glass border border-border/60 rounded-3xl p-5 shadow-card group hover:border-primary/30 transition-all">
-        <div className="flex items-center gap-3">
-          <div className="h-11 w-11 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-            <Target className="h-5 w-5 text-primary" strokeWidth={2.2} />
-          </div>
-          <div className="flex-1">
-            <p className="text-xs text-muted-foreground font-medium">Metas financeiras</p>
-            <p className="font-display font-semibold text-sm">Acompanhe seus objetivos →</p>
-          </div>
-          <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-        </div>
-      </Link>
-
-      {/* ─── Card: Insight IA ─── */}
-      {topInsight && (
-        <Link to="/app/insights" className="block glass border border-primary/25 rounded-3xl p-5 shadow-card group">
-          <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-2xl gradient-primary flex items-center justify-center shadow-glow shrink-0">
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-primary font-bold uppercase tracking-widest">Dica do Pigly ✨</p>
-              <p className="font-display font-semibold text-sm mt-0.5 line-clamp-2">{topInsight.title}</p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground self-center group-hover:translate-x-1 transition-transform" />
-          </div>
-        </Link>
-      )}
-
-      {/* ─── Card: Últimas Transações ─── */}
-      <section className="glass border border-border/60 rounded-3xl shadow-card overflow-hidden">
-        <div className="flex items-center justify-between px-5 pt-5 pb-3">
-          <div>
-            <h2 className="font-display font-semibold">Últimas transações</h2>
-            <p className="text-xs text-muted-foreground">{recentTx.length} lançamento{recentTx.length !== 1 ? "s" : ""}</p>
-          </div>
-          <Link to="/app/transactions" className="flex items-center gap-1 text-xs text-primary font-semibold">
-            Ver tudo <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-
-        {recentTx.length === 0 ? (
-          <div className="px-5 pb-7 text-center">
-            <PiggyBank className="h-12 w-12 text-muted-foreground/25 mx-auto mb-3" strokeWidth={1.5} />
-            <p className="text-sm font-medium text-muted-foreground">Nenhum lançamento ainda</p>
-            <p className="text-xs text-muted-foreground/70 mt-1">Use o botão acima para começar!</p>
-          </div>
-        ) : (
-          <ul className="divide-y divide-border/40 px-5">
-            {recentTx.map((t: any) => (
-              <li key={t.id}>
-                <TransactionItem description={t.description} amount={Number(t.amount)}
-                  type={t.type} date={t.date} category={t.categories} account={t.accounts} />
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {recentTx.length > 0 && (
-          <Link to="/app/transactions"
-            className="flex items-center justify-center gap-1.5 py-4 text-xs text-muted-foreground hover:text-primary transition border-t border-border/40">
-            Ver todas as transações <ArrowRight className="h-3 w-3" />
-          </Link>
         )}
       </section>
+
+      {/* ─── Transações Recentes ─── */}
+      <section className="bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="font-display text-lg font-bold text-slate-800">Últimas Atividades</h2>
+          <Link to="/app/transactions" className="text-[13px] text-emerald-600 font-bold">
+            Ver Mais
+          </Link>
+        </div>
+        
+        <div className="space-y-4">
+          {inMonth.slice(0, 3).map((t: any) => (
+            <div key={t.id} className="flex items-center justify-between group">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors">
+                  <ArrowLeftRight className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-slate-700">{t.description?.split(' (')[0]}</p>
+                    {t.installment_total > 1 && (
+                      <span className="text-[9px] font-bold px-1 bg-slate-100 text-slate-500 rounded uppercase">
+                        {t.installment_current}/{t.installment_total}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-400">{new Date(t.date).toLocaleDateString('pt-BR')}</p>
+                </div>
+              </div>
+              <p className={`text-sm font-bold ${t.type === 'income' ? 'text-emerald-600' : 'text-slate-700'}`}>
+                {t.type === 'income' ? '+' : '-'} {formatBRL(Math.abs(t.amount))}
+              </p>
+            </div>
+          ))}
+          {inMonth.length === 0 && (
+            <p className="text-center text-slate-400 text-sm py-4">Sem atividades recentes</p>
+          )}
+        </div>
+      </section>
+
     </div>
   );
 };
