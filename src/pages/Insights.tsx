@@ -72,9 +72,11 @@ const Insights = () => {
 
       {/* Cartão de Saúde Financeira */}
       <div className="relative glass border border-border/60 rounded-3xl p-5 shadow-card overflow-hidden">
-        <div className="absolute -right-6 -bottom-6 opacity-80 pointer-events-none"><PiggyMascot size={130} /></div>
+        <div className="absolute -right-4 top-2 opacity-90 pointer-events-none drop-shadow-2xl">
+          <PiggyMascot size={110} />
+        </div>
         
-        <div className="relative pr-24">
+        <div className="relative pr-28">
           <div className="flex items-center gap-2 mb-4">
             <div className={`h-8 w-8 rounded-full flex items-center justify-center ${stats.overspent ? 'bg-destructive/20 text-destructive' : stats.spentPercent > 80 ? 'bg-amber-500/20 text-amber-500' : 'bg-success/20 text-success'}`}>
               {stats.overspent ? <AlertTriangle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
