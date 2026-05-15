@@ -39,6 +39,7 @@ export const useAddTransaction = () => {
 
       // If installments, create all parcels
       if (payload.installment_total && payload.installment_total > 1) {
+        const groupId = crypto.randomUUID();
         const rows = Array.from({ length: payload.installment_total }, (_, i) => {
           const baseDate = payload.date ? new Date(payload.date + "T12:00:00") : new Date();
           baseDate.setMonth(baseDate.getMonth() + i);
@@ -52,6 +53,7 @@ export const useAddTransaction = () => {
             category_id: payload.category_id ?? null,
             account_id: payload.account_id ?? null,
             date: baseDate.toISOString().split("T")[0],
+            installment_group_id: groupId,
             installment_total: payload.installment_total,
             installment_current: i + 1,
             source: "manual",
