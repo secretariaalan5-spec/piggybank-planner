@@ -211,7 +211,7 @@ export const QuickMessageInput = () => {
               <div className="bg-card/60 rounded-xl p-3">
                 <p className="text-[10px] text-muted-foreground uppercase font-semibold mb-0.5">Tipo</p>
                 <p className="font-semibold text-sm capitalize">
-                  {result.type === "expense" ? "💸 Despesa" : "💰 Receita"}
+                  {result.type === "expense" ? "💸 Saiu (Gasto)" : "💰 Entrou (Ganho)"}
                 </p>
               </div>
               <div className="bg-card/60 rounded-xl p-3">
@@ -229,7 +229,7 @@ export const QuickMessageInput = () => {
             </p>
 
             <div className="flex gap-2 pt-1">
-              <Button
+               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setResult(null)}

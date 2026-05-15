@@ -23,7 +23,7 @@ const CAT_ICONS: Record<string, React.ElementType> = {
 
 // ── Card de Categoria ──────────────────────────────────────────────────────────
 const CatCard = ({ name, value, total, color, delay }: {
-  name: string; value: number; total: number; color: string; delay: number;
+  name: string; value: total: number; color: string; delay: number;
 }) => {
   const Icon = CAT_ICONS[name.toLowerCase()] ?? ShoppingCart;
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
@@ -140,11 +140,11 @@ const Dashboard = () => {
         {/* Receita / Despesa */}
         <div className="grid grid-cols-2 gap-3 mt-2">
           <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100/50">
-            <p className="text-[12px] text-emerald-700/80 font-medium mb-1">Renda Mensal</p>
+            <p className="text-[12px] text-emerald-700/80 font-medium mb-1">Ganhei</p>
             <p className="font-display font-bold text-lg text-emerald-800">{v(income)}</p>
           </div>
           <div className="bg-rose-50 rounded-xl p-3 border border-rose-100/50">
-            <p className="text-[12px] text-rose-700/80 font-medium mb-1">Gasto Mensal</p>
+            <p className="text-[12px] text-rose-700/80 font-medium mb-1">Gastei</p>
             <p className="font-display font-bold text-lg text-rose-800">{v(expense)}</p>
           </div>
         </div>
@@ -166,15 +166,18 @@ const Dashboard = () => {
         </motion.div>
       )}
 
+      {/* ─── Oink AI: Entrada Mágica ─── */}
+      <QuickMessageInput />
+
       {/* ─── Ações Rápidas ─── */}
       <div className="flex gap-3">
         <AddTransactionSheet trigger={
           <button className="flex-1 flex items-center justify-center gap-2 h-12 bg-slate-900 text-white rounded-[20px] font-medium text-sm shadow-md active:scale-95 transition-all">
-            <Plus className="h-4 w-4" /> Novo
+            <Plus className="h-4 w-4" /> Manual
           </button>
         } />
         <Link to="/app/transactions" className="flex-1 flex items-center justify-center gap-2 h-12 bg-white text-slate-700 border border-slate-200 rounded-[20px] font-medium text-sm shadow-sm active:scale-95 transition-all">
-           Ver todas
+           Extrato Completo
         </Link>
       </div>
 
