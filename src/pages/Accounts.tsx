@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Wallet, CreditCard, PiggyBank, Banknote, TrendingUp,
-  Plus, Trash2, ChevronRight, Building2
+  Plus, Trash2, Building2
 } from "lucide-react";
 import { useAccounts, useAddAccount, useDeleteAccount } from "@/hooks/useFinance";
 import {
@@ -50,6 +50,7 @@ function AddAccountSheet() {
 
   const handleSubmit = async () => {
     if (!name.trim()) return;
+    navigator.vibrate?.(10);
     await addAccount.mutateAsync({
       name: name.trim(),
       type,
@@ -65,7 +66,10 @@ function AddAccountSheet() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <button className="flex flex-col items-center justify-center gap-1.5 glass border border-dashed border-border/60 rounded-2xl p-4 w-full text-muted-foreground hover:text-primary hover:border-primary/40 transition-all">
+        <button 
+          onClick={() => navigator.vibrate?.(10)}
+          className="flex flex-col items-center justify-center gap-1.5 glass border border-dashed border-border/60 rounded-2xl p-4 w-full text-muted-foreground hover:text-primary hover:border-primary/40 transition-all"
+        >
           <Plus className="h-5 w-5" />
           <span className="text-xs font-semibold">Nova conta</span>
         </button>
@@ -82,7 +86,7 @@ function AddAccountSheet() {
               {ACCOUNT_TYPES.map(({ value, label, icon: Icon }) => (
                 <button
                   key={value}
-                  onClick={() => { setType(value); setColor(ACCOUNT_TYPES.find(t=>t.value===value)?.color ?? color); }}
+                  onClick={() => { setType(value); setColor(ACCOUNT_TYPES.find(t=>t.value===value)?.color ?? color); navigator.vibrate?.(5); }}
                   className={`flex flex-col items-center gap-1 p-3 rounded-2xl border text-xs font-semibold transition-all ${
                     type === value
                       ? "border-primary bg-primary/10 text-primary"
@@ -132,7 +136,7 @@ function AddAccountSheet() {
             <Label className="text-xs text-muted-foreground mb-2 block">Cor</Label>
             <div className="flex gap-2 flex-wrap">
               {ACCOUNT_COLORS.map(c => (
-                <button key={c} onClick={() => setColor(c)}
+                <button key={c} onClick={() => { setColor(c); navigator.vibrate?.(5); }}
                   className={`h-7 w-7 rounded-full border-2 transition-all ${color === c ? "border-foreground scale-110" : "border-transparent"}`}
                   style={{ background: c }} />
               ))}
@@ -140,7 +144,7 @@ function AddAccountSheet() {
           </div>
 
           <Button onClick={handleSubmit} disabled={addAccount.isPending || !name.trim()}
-            className="w-full gradient-primary text-primary-foreground font-semibold rounded-2xl h-12">
+            className="w-full gradient-primary text-primary-foreground font-semibold rounded-2xl h-12 shadow-glow">
             {addAccount.isPending ? "Salvando…" : "Adicionar conta"}
           </Button>
         </div>
@@ -219,7 +223,7 @@ const Accounts = () => {
                     )}
                   </div>
                   <button
-                    onClick={() => setConfirm(confirm === acc.id ? null : acc.id)}
+                    onClick={() => { setConfirm(confirm === acc.id ? null : acc.id); navigator.vibrate?.(5); }}
                     className="ml-1 text-muted-foreground hover:text-destructive transition-colors"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -245,7 +249,7 @@ const Accounts = () => {
             <p className="flex-1 text-sm font-semibold">Remover esta conta?</p>
             <Button variant="ghost" size="sm" onClick={() => setConfirm(null)}>Cancelar</Button>
             <Button size="sm" variant="destructive"
-              onClick={() => { deleteAccount.mutate(confirm!); setConfirm(null); }}>
+              onClick={() => { deleteAccount.mutate(confirm!); setConfirm(null); navigator.vibrate?.(10); }}>
               Remover
             </Button>
           </motion.div>

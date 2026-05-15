@@ -46,6 +46,7 @@ const Goals = () => {
     });
     setLoading(false);
     if (error) { toast.error(error.message); return; }
+    navigator.vibrate?.(10);
     toast.success("Meta criada!");
     qc.invalidateQueries({ queryKey: ["goals"] });
     setOpen(false);
@@ -55,7 +56,11 @@ const Goals = () => {
   const remove = async (id: string) => {
     const { error } = await supabase.from("goals").delete().eq("id", id);
     if (error) toast.error(error.message);
-    else { toast.success("Meta removida"); qc.invalidateQueries({ queryKey: ["goals"] }); }
+    else { 
+      navigator.vibrate?.(10);
+      toast.success("Meta removida"); 
+      qc.invalidateQueries({ queryKey: ["goals"] }); 
+    }
   };
 
   return (
