@@ -31,7 +31,7 @@ const Transactions = () => {
 
   return (
     <div className="px-5 pt-6 space-y-4 relative">
-      <h1 className="font-display text-2xl font-bold tracking-tight">Lançamentos</h1>
+      <h1 className="font-display text-2xl font-bold tracking-tight">Extrato</h1>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -39,7 +39,7 @@ const Transactions = () => {
       </div>
 
       <div className="grid grid-cols-3 gap-2 p-1 bg-muted rounded-2xl">
-        {([["all", "Todos"], ["income", "Receitas"], ["expense", "Despesas"]] as const).map(([k, l]) => (
+        {([["all", "Todos"], ["income", "Ganhei"], ["expense", "Gastei"]] as const).map(([k, l]) => (
           <button key={k} onClick={() => setFilter(k as any)} className={`py-2 rounded-xl text-xs font-semibold transition ${filter === k ? "bg-card shadow-card text-foreground" : "text-muted-foreground"}`}>{l}</button>
         ))}
       </div>
@@ -60,6 +60,7 @@ const Transactions = () => {
                 {items.map((t: any) => (
                   <li key={t.id}>
                     <TransactionItem 
+                      id={t.id}
                       description={t.description} 
                       amount={Number(t.amount)} 
                       type={t.type} 

@@ -148,7 +148,7 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
                 onClick={() => { setType(t); setCategoryId(""); }}
                 className={`py-2.5 rounded-xl text-sm font-semibold transition ${type === t ? "bg-card shadow-card text-foreground" : "text-muted-foreground"}`}
               >
-                {t === "expense" ? "Despesa" : "Receita"}
+                {t === "expense" ? "Gastei" : "Ganhei"}
               </button>
             ))}
           </div>
@@ -214,4 +214,3 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
     </Sheet>
   );
 };
-

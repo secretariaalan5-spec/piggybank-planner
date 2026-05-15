@@ -23,7 +23,7 @@ const CAT_ICONS: Record<string, React.ElementType> = {
 
 // ── Card de Categoria ──────────────────────────────────────────────────────────
 const CatCard = ({ name, value, total, color, delay }: {
-  name: string; value: total: number; color: string; delay: number;
+  name: string; value: number; total: number; color: string; delay: number;
 }) => {
   const Icon = CAT_ICONS[name.toLowerCase()] ?? ShoppingCart;
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
@@ -221,14 +221,7 @@ const Dashboard = () => {
                   <ArrowLeftRight className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold text-slate-700">{t.description?.split(' (')[0]}</p>
-                    {t.installment_total > 1 && (
-                      <span className="text-[9px] font-bold px-1 bg-slate-100 text-slate-500 rounded uppercase">
-                        {t.installment_current}/{t.installment_total}
-                      </span>
-                    )}
-                  </div>
+                  <p className="text-sm font-semibold text-slate-700">{t.description}</p>
                   <p className="text-[11px] text-slate-400">{new Date(t.date).toLocaleDateString('pt-BR')}</p>
                 </div>
               </div>
