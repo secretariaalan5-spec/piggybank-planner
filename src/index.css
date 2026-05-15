@@ -112,7 +112,12 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "ss01", "cv11";
-    overscroll-behavior-y: none;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html {
+    overscroll-behavior: none;
   }
 
   /* Hide scrollbar but allow scroll */
