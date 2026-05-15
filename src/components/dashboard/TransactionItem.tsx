@@ -48,7 +48,7 @@ export const TransactionItem = ({ id, description, amount, type, date, category,
         onDragEnd={handleDragEnd}
         animate={controls}
         whileTap={{ cursor: "grabbing" }}
-        className="relative bg-white flex items-center gap-3 py-3 px-1 cursor-grab"
+        className="relative bg-background flex items-center gap-3 py-3 px-1 cursor-grab"
       >
         <div className="h-11 w-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: `${category?.color || "#10b981"}22`, color: category?.color || "#10b981" }}>
           <Icon className="h-5 w-5" strokeWidth={2.2} />

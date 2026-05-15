@@ -36,17 +36,17 @@ const CatCard = ({ name, value, total, color, delay }: {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay, duration: 0.35 }}
-      className="bg-white rounded-[20px] p-4 border border-slate-100 shadow-sm flex flex-col gap-3"
+      className="glass rounded-[20px] p-4 border border-border/60 shadow-card flex flex-col gap-3"
     >
       <div className="h-11 w-11 rounded-full flex items-center justify-center mb-1" style={{ background: color + "22" }}>
         <Icon className="h-5 w-5" style={{ color }} strokeWidth={2.5} />
       </div>
       <div>
         <p className="text-[13px] text-muted-foreground font-medium truncate mb-1">{name}</p>
-        <p className="font-display font-bold text-[22px] tracking-tight text-slate-800">{formatBRL(value)}</p>
+        <p className="font-display font-bold text-[22px] tracking-tight text-foreground">{formatBRL(value)}</p>
       </div>
       <div className="mt-2">
-        <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden mb-2">
+        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden mb-2">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${pct}%` }}
@@ -55,7 +55,7 @@ const CatCard = ({ name, value, total, color, delay }: {
             style={{ background: isCritical ? "#ff4d4f" : color }}
           />
         </div>
-        <p className={`text-[11px] font-medium ${isCritical ? 'text-red-500' : 'text-slate-400'}`}>
+        <p className={`text-[11px] font-medium ${isCritical ? 'text-red-500' : 'text-muted-foreground'}`}>
           {isCritical ? "Nível crítico" : `${pct}% do total`}
         </p>
       </div>
@@ -100,38 +100,38 @@ const Dashboard = () => {
   const v = (n: number) => hidden ? "R$ ••••" : formatBRL(n);
 
   return (
-    <div className="px-5 pt-6 pb-32 space-y-8 bg-slate-50 min-h-screen">
+    <div className="px-5 pt-6 pb-32 space-y-8 bg-background min-h-screen">
 
       {/* ─── Header ─── */}
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center overflow-hidden border border-emerald-200">
-            <PiggyBank className="h-6 w-6 text-emerald-600" />
+          <div className="h-10 w-10 rounded-full bg-pink-100 dark:bg-pink-500/20 flex items-center justify-center overflow-hidden border border-pink-200 dark:border-pink-500/30">
+            <PiggyBank className="h-6 w-6 text-pink-500" />
           </div>
-          <h1 className="font-display text-xl font-bold text-emerald-800">
+          <h1 className="font-display text-xl font-bold text-foreground">
             Olá, {profile?.display_name?.split(' ')[0] || "Economizador"}!
           </h1>
         </div>
-        <button className="h-10 w-10 flex items-center justify-center text-emerald-800 hover:bg-emerald-100 rounded-full transition">
+        <button className="h-10 w-10 flex items-center justify-center text-foreground hover:bg-muted rounded-full transition">
           <Bell className="h-5 w-5" />
         </button>
       </header>
 
       {/* ─── Hero Card: Saldo ─── */}
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm">
+        className="glass rounded-[24px] p-6 border border-border/60 shadow-card">
         
         {/* Saldo Total */}
         <div className="mb-6 relative">
-          <p className="text-[13px] text-slate-500 font-medium mb-1 flex justify-between items-center">
+          <p className="text-[13px] text-muted-foreground font-medium mb-1 flex justify-between items-center">
             Saldo Total
-            <button onClick={() => setHidden(h => !h)} className="text-slate-400 hover:text-slate-600">
+            <button onClick={() => setHidden(h => !h)} className="text-muted-foreground hover:text-foreground">
               {hidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </p>
           <AnimatePresence mode="wait">
             <motion.p key={`${month}-${year}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-              className="font-display text-[40px] font-extrabold tracking-tight text-slate-900">
+              className="font-display text-[40px] font-extrabold tracking-tight text-foreground">
               {hidden ? "R$ ••••••" : formatBRL(balance)}
             </motion.p>
           </AnimatePresence>
@@ -139,13 +139,13 @@ const Dashboard = () => {
 
         {/* Receita / Despesa */}
         <div className="grid grid-cols-2 gap-3 mt-2">
-          <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100/50">
-            <p className="text-[12px] text-emerald-700/80 font-medium mb-1">Ganhei</p>
-            <p className="font-display font-bold text-lg text-emerald-800">{v(income)}</p>
+          <div className="bg-success/10 rounded-xl p-3 border border-success/20">
+            <p className="text-[12px] text-success/80 font-medium mb-1">Ganhei</p>
+            <p className="font-display font-bold text-lg text-success">{v(income)}</p>
           </div>
-          <div className="bg-rose-50 rounded-xl p-3 border border-rose-100/50">
-            <p className="text-[12px] text-rose-700/80 font-medium mb-1">Gastei</p>
-            <p className="font-display font-bold text-lg text-rose-800">{v(expense)}</p>
+          <div className="bg-destructive/10 rounded-xl p-3 border border-destructive/20">
+            <p className="text-[12px] text-destructive/80 font-medium mb-1">Gastei</p>
+            <p className="font-display font-bold text-lg text-destructive">{v(expense)}</p>
           </div>
         </div>
       </motion.div>
@@ -153,13 +153,13 @@ const Dashboard = () => {
       {/* ─── Resumo Simples ─── */}
       {balance > 0 && (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-          className="bg-emerald-50 rounded-[20px] p-5 border border-emerald-100 flex items-center gap-4">
-          <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0">
+          className="bg-primary/10 rounded-[20px] p-5 border border-primary/20 flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
             <Sparkles className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-[13px] text-emerald-800 font-bold mb-0.5">Ótimo trabalho!</p>
-            <p className="text-xs text-emerald-700/80 leading-relaxed">
+            <p className="text-[13px] text-foreground font-bold mb-0.5">Ótimo trabalho!</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Você já economizou <span className="font-bold">{formatBRL(balance)}</span> este mês. Continue assim!
             </p>
           </div>
@@ -172,11 +172,11 @@ const Dashboard = () => {
       {/* ─── Ações Rápidas ─── */}
       <div className="flex gap-3">
         <AddTransactionSheet trigger={
-          <button className="flex-1 flex items-center justify-center gap-2 h-12 bg-slate-900 text-white rounded-[20px] font-medium text-sm shadow-md active:scale-95 transition-all">
+          <button className="flex-1 flex items-center justify-center gap-2 h-12 bg-primary text-primary-foreground rounded-[20px] font-medium text-sm shadow-md active:scale-95 transition-all">
             <Plus className="h-4 w-4" /> Manual
           </button>
         } />
-        <Link to="/app/transactions" className="flex-1 flex items-center justify-center gap-2 h-12 bg-white text-slate-700 border border-slate-200 rounded-[20px] font-medium text-sm shadow-sm active:scale-95 transition-all">
+        <Link to="/app/transactions" className="flex-1 flex items-center justify-center gap-2 h-12 bg-card text-foreground border border-border/60 rounded-[20px] font-medium text-sm shadow-sm active:scale-95 transition-all">
            Extrato Completo
         </Link>
       </div>
@@ -184,16 +184,16 @@ const Dashboard = () => {
       {/* ─── Cards: Categorias de Gasto ─── */}
       <section>
         <div className="flex items-center justify-between mb-5 px-1">
-          <h2 className="font-display text-[19px] font-bold text-slate-800">Gastos por Categoria</h2>
-          <Link to="/app/insights" className="text-[13px] text-emerald-600 font-bold hover:text-emerald-700">
+          <h2 className="font-display text-[19px] font-bold text-foreground">Gastos por Categoria</h2>
+          <Link to="/app/insights" className="text-[13px] text-primary font-bold hover:text-primary/80">
             Ver Tudo
           </Link>
         </div>
         
         {catSlices.length === 0 ? (
-          <div className="bg-white rounded-[20px] p-8 text-center shadow-sm border border-slate-100">
-            <PiggyBank className="h-10 w-10 text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-500 text-sm font-medium">Nenhum gasto registrado este mês.</p>
+          <div className="glass rounded-[20px] p-8 text-center shadow-card border border-border/60">
+            <PiggyBank className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="text-muted-foreground text-sm font-medium">Nenhum gasto registrado este mês.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
@@ -205,10 +205,10 @@ const Dashboard = () => {
       </section>
 
       {/* ─── Transações Recentes ─── */}
-      <section className="bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm">
+      <section className="glass rounded-[24px] p-6 border border-border/60 shadow-card">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="font-display text-lg font-bold text-slate-800">Últimas Atividades</h2>
-          <Link to="/app/transactions" className="text-[13px] text-emerald-600 font-bold">
+          <h2 className="font-display text-lg font-bold text-foreground">Últimas Atividades</h2>
+          <Link to="/app/transactions" className="text-[13px] text-primary font-bold">
             Ver Mais
           </Link>
         </div>
@@ -217,21 +217,21 @@ const Dashboard = () => {
           {inMonth.slice(0, 3).map((t: any) => (
             <div key={t.id} className="flex items-center justify-between group">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-500 transition-colors">
+                <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                   <ArrowLeftRight className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">{t.description}</p>
-                  <p className="text-[11px] text-slate-400">{new Date(t.date).toLocaleDateString('pt-BR')}</p>
+                  <p className="text-sm font-semibold text-foreground">{t.description}</p>
+                  <p className="text-[11px] text-muted-foreground">{new Date(t.date).toLocaleDateString('pt-BR')}</p>
                 </div>
               </div>
-              <p className={`text-sm font-bold ${t.type === 'income' ? 'text-emerald-600' : 'text-slate-700'}`}>
+              <p className={`text-sm font-bold ${t.type === 'income' ? 'text-success' : 'text-foreground'}`}>
                 {t.type === 'income' ? '+' : '-'} {formatBRL(Math.abs(t.amount))}
               </p>
             </div>
           ))}
           {inMonth.length === 0 && (
-            <p className="text-center text-slate-400 text-sm py-4">Sem atividades recentes</p>
+            <p className="text-center text-muted-foreground text-sm py-4">Sem atividades recentes</p>
           )}
         </div>
       </section>
