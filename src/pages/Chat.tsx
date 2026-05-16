@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, Sparkles, User, Loader2 } from "lucide-react";
+import { Send, Bot, Sparkles, User, Loader2, PiggyBank } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -102,11 +102,11 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-env(safe-area-inset-top))]">
+    <div className="flex-1 flex flex-col h-full relative">
       {/* Header Fixo */}
       <div className="bg-background/90 backdrop-blur-2xl border-b border-border/60 sticky top-0 z-20 p-4 flex items-center gap-3">
-        <div className="h-10 w-10 rounded-2xl shrink-0 relative overflow-hidden shadow-glow">
-          <img src="/pigly-avatar.png" alt="Pigly" className="w-full h-full object-cover" />
+        <div className="h-10 w-10 rounded-2xl shrink-0 relative bg-primary/10 border border-primary/20 flex items-center justify-center shadow-glow">
+          <PiggyBank className="h-6 w-6 text-primary" />
           <span className="absolute bottom-0 right-0 w-3 h-3 bg-[#22c55e] border-2 border-background rounded-full z-10"></span>
         </div>
         <div>
@@ -118,7 +118,7 @@ export default function Chat() {
       </div>
 
       {/* Área do Chat */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-[140px]">
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {initialLoading ? (
           <div className="flex justify-center py-10">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -135,8 +135,8 @@ export default function Chat() {
                   className={`flex ${isUser ? "justify-end" : "justify-start"}`}
                 >
                   {!isUser && (
-                    <div className="h-8 w-8 rounded-full shrink-0 mr-2 mt-auto overflow-hidden shadow-glow">
-                      <img src="/pigly-avatar.png" alt="Pigly" className="w-full h-full object-cover" />
+                    <div className="h-8 w-8 rounded-full shrink-0 mr-2 mt-auto bg-primary/10 border border-primary/20 flex items-center justify-center shadow-glow">
+                      <PiggyBank className="h-5 w-5 text-primary" />
                     </div>
                   )}
                   
@@ -162,8 +162,8 @@ export default function Chat() {
             animate={{ opacity: 1, y: 0 }}
             className="flex justify-start"
           >
-            <div className="h-8 w-8 rounded-full shrink-0 mr-2 mt-auto overflow-hidden shadow-glow">
-              <img src="/pigly-avatar.png" alt="Pigly" className="w-full h-full object-cover" />
+            <div className="h-8 w-8 rounded-full shrink-0 mr-2 mt-auto bg-primary/10 border border-primary/20 flex items-center justify-center shadow-glow">
+              <PiggyBank className="h-5 w-5 text-primary" />
             </div>
             <div className="glass rounded-2xl rounded-bl-sm p-4 flex items-center gap-1 w-16 h-10 border border-border/60">
               <motion.div className="w-1.5 h-1.5 bg-primary rounded-full" animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} />
@@ -176,7 +176,7 @@ export default function Chat() {
       </div>
 
       {/* Input de Mensagem */}
-      <div className="fixed bottom-[72px] sm:bottom-[72px] left-0 right-0 p-3 bg-background/95 backdrop-blur-3xl border-t border-border/60 w-full max-w-[480px] mx-auto z-10">
+      <div className="sticky bottom-0 left-0 right-0 p-3 bg-background/95 backdrop-blur-3xl border-t border-border/60 z-10">
         <div className="relative flex items-center">
           <Input 
             value={input}

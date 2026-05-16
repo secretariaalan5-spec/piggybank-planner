@@ -16,12 +16,13 @@ export const AppLayout = ({ children }: { children?: ReactNode }) => {
   return (
     <div className="min-h-[100dvh] bg-background gradient-mesh flex justify-center overflow-x-hidden overscroll-none">
       <div className="w-full max-w-[480px] flex flex-col min-h-[100dvh] relative">
-        <main className="flex-1 pb-20 pt-[env(safe-area-inset-top)]">
+        <main className="flex-1 flex flex-col pt-[max(env(safe-area-inset-top),_3.5rem)] pb-[calc(84px+env(safe-area-inset-bottom))]">
           <motion.div
             key={loc.pathname}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: [0.32, 0.72, 0.24, 1] }}
+            className="flex-1 flex flex-col"
           >
             {children ?? <Outlet />}
           </motion.div>
