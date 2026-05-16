@@ -37,7 +37,7 @@ export default function Chat() {
           setMessages([{
             id: "welcome",
             role: "assistant",
-            content: "Olá! Sou o Pigly, seu conselheiro financeiro de bolso. Oink! 🐷\n\nVocê pode me predir coisas como:\n• \"Comprei um lanche por 20\"\n• \"Recebi meu salário de 3000\"\n• \"Quanto gastei com Uber esse mês?\"\n\nComo posso ajudar hoje?",
+            content: "Olá! Sou o Pigly, seu conselheiro financeiro de bolso. Oink! 🐷\n\nVocê pode me pedir coisas como:\n• \"Comprei um lanche por 20\"\n• \"Recebi meu salário de 3000\"\n• \"Quanto gastei com Uber esse mês?\"\n\nComo posso ajudar hoje?",
             created_at: new Date().toISOString()
           }]);
         } else {
@@ -102,7 +102,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex-1 flex flex-col relative h-full">
+    <div className="flex flex-col h-[calc(100dvh-env(safe-area-inset-top))]">
       {/* Header Fixo */}
       <div className="bg-background/90 backdrop-blur-2xl border-b border-border/60 sticky top-0 z-20 p-4 flex items-center gap-3">
         <div className="h-10 w-10 rounded-2xl shrink-0 relative overflow-hidden shadow-glow">
@@ -118,7 +118,7 @@ export default function Chat() {
       </div>
 
       {/* Área do Chat */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-[90px]">
+      <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-[140px]">
         {initialLoading ? (
           <div className="flex justify-center py-10">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -176,7 +176,7 @@ export default function Chat() {
       </div>
 
       {/* Input de Mensagem */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 bg-background/95 backdrop-blur-3xl border-t border-border/60 z-10">
+      <div className="fixed bottom-[72px] sm:bottom-[72px] left-0 right-0 p-3 bg-background/95 backdrop-blur-3xl border-t border-border/60 w-full max-w-[480px] mx-auto z-10">
         <div className="relative flex items-center">
           <Input 
             value={input}
