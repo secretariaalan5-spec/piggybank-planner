@@ -7,7 +7,7 @@ const tabs = [
   { to: "/app", label: "Home", icon: Home, end: true },
   { to: "/app/transactions", label: "Extrato", icon: PlusCircle },
   { to: "/app/insights", label: "Resumo", icon: BarChart2 },
-  { to: "/app/settings", label: "Oink AI", icon: Bot },
+  { to: "/app/chat", label: "Oink AI", icon: Bot },
 ];
 
 export const AppLayout = ({ children }: { children?: ReactNode }) => {
