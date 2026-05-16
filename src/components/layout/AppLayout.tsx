@@ -13,15 +13,20 @@ const tabs = [
 
 export const AppLayout = ({ children }: { children?: ReactNode }) => {
   const loc = useLocation();
+  const isChat = loc.pathname.includes("/chat");
+
   return (
-    <div className="min-h-[100dvh] bg-background gradient-mesh flex justify-center overflow-x-hidden overscroll-none">
-      <div className="w-full max-w-[480px] flex flex-col min-h-[100dvh] relative">
-        <main className="flex-1 pb-20 pt-[env(safe-area-inset-top)]">
+    <div className="h-[100dvh] w-screen bg-background gradient-mesh flex justify-center overflow-hidden overscroll-none">
+      <div className="w-full max-w-[480px] h-full flex flex-col relative bg-background/50 shadow-2xl">
+        <main className={`flex-1 flex flex-col pt-[env(safe-area-inset-top)] pb-[calc(72px+env(safe-area-inset-bottom))] ${
+          isChat ? "overflow-hidden" : "overflow-y-auto overflow-x-hidden"
+        }`}>
           <motion.div
             key={loc.pathname}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: [0.32, 0.72, 0.24, 1] }}
+            className="flex-1 flex flex-col min-h-full"
           >
             {children ?? <Outlet />}
           </motion.div>
