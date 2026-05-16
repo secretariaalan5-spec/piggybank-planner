@@ -105,9 +105,9 @@ export default function Chat() {
     <div className="flex flex-col h-[calc(100dvh-env(safe-area-inset-top))]">
       {/* Header Fixo */}
       <div className="bg-background/90 backdrop-blur-2xl border-b border-border/60 sticky top-0 z-20 p-4 flex items-center gap-3">
-        <div className="h-10 w-10 rounded-2xl gradient-primary flex items-center justify-center shadow-glow shrink-0 relative">
-          <Bot className="h-5 w-5 text-primary-foreground" />
-          <span className="absolute bottom-0 right-0 w-3 h-3 bg-[#22c55e] border-2 border-background rounded-full"></span>
+        <div className="h-10 w-10 rounded-2xl shrink-0 relative overflow-hidden shadow-glow">
+          <img src="/pigly-avatar.png" alt="Pigly" className="w-full h-full object-cover" />
+          <span className="absolute bottom-0 right-0 w-3 h-3 bg-[#22c55e] border-2 border-background rounded-full z-10"></span>
         </div>
         <div>
           <h1 className="font-display font-bold text-lg leading-tight">Oink AI</h1>
@@ -135,8 +135,8 @@ export default function Chat() {
                   className={`flex ${isUser ? "justify-end" : "justify-start"}`}
                 >
                   {!isUser && (
-                    <div className="h-8 w-8 rounded-full gradient-primary flex items-center justify-center shrink-0 mr-2 mt-auto">
-                      <Bot className="h-4 w-4 text-primary-foreground" />
+                    <div className="h-8 w-8 rounded-full shrink-0 mr-2 mt-auto overflow-hidden shadow-glow">
+                      <img src="/pigly-avatar.png" alt="Pigly" className="w-full h-full object-cover" />
                     </div>
                   )}
                   
@@ -162,8 +162,8 @@ export default function Chat() {
             animate={{ opacity: 1, y: 0 }}
             className="flex justify-start"
           >
-            <div className="h-8 w-8 rounded-full gradient-primary flex items-center justify-center shrink-0 mr-2 mt-auto">
-              <Bot className="h-4 w-4 text-primary-foreground" />
+            <div className="h-8 w-8 rounded-full shrink-0 mr-2 mt-auto overflow-hidden shadow-glow">
+              <img src="/pigly-avatar.png" alt="Pigly" className="w-full h-full object-cover" />
             </div>
             <div className="glass rounded-2xl rounded-bl-sm p-4 flex items-center gap-1 w-16 h-10 border border-border/60">
               <motion.div className="w-1.5 h-1.5 bg-primary rounded-full" animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} />

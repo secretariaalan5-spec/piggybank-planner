@@ -46,25 +46,44 @@ serve(async (req) => {
     
     // Reverse to chronological order
     const history = (chatHistory || []).reverse().map(msg => {
-      // Gemini uses "user" and "model" roles
       return {
         role: msg.role === "assistant" ? "model" : "user",
         parts: [{ text: msg.content }]
       };
     });
 
-    // Append the new message
-    history.push({
-      role: "user",
-      parts: [{ text: message }]
-    });
+    history.push({ role: "user", parts: [{ text: message }] });
 
-    // 3. System Prompt with Tool instructions
-    const today = new Date().toISOString().split("T")[0];
+    // 3. Fetch Transaction History (Current Month) for context
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split("T")[0];
+    
+    const { data: recentTxs } = await supabaseAdmin
+      .from("transactions")
+      .select("amount, type, description, date, category:categories(name)")
+      .eq("user_id", user_id)
+      .gte("date", firstDay)
+      .order("date", { ascending: false });
+
+    let txSummary = "Nenhuma transação registrada este mês ainda.";
+    if (recentTxs && recentTxs.length > 0) {
+      txSummary = recentTxs.map(t => 
+        `- ${t.date}: ${t.type === 'expense' ? 'Gasto' : 'Ganho'} de R$ ${t.amount} em ${t.category?.name || 'Outros'} (${t.description})`
+      ).join("\n");
+    }
+
+    // 4. System Prompt with Tool instructions and Data Context
+    const todayStr = today.toISOString().split("T")[0];
     const systemPrompt = `Você é o Pigly, um porquinho conselheiro financeiro de bolso do usuário.
 Você é caloroso, usa emojis como 🐷, 📈, 💸 e responde de forma curta e direta (máximo 2-3 frases).
 
-Seu SUPER PODER é registrar as transações no sistema.
+--- DADOS DO USUÁRIO ---
+Data de hoje: ${todayStr}
+Abaixo estão as transações do usuário deste mês. Use isso para responder perguntas como "quanto gastei?" ou "onde foi meu dinheiro?":
+${txSummary}
+------------------------
+
+Seu SUPER PODER é registrar novas transações no sistema.
 Se o usuário pedir para registrar um gasto, pagamento, compra ou recebimento (ex: "gastei 50 no ifood", "salario caiu 2000"), você NÃO DEVE responder com texto.
 Você DEVE obrigatoriamente retornar um JSON válido neste formato:
 {"__TOOL_CALL__": "register_transaction", "amount": 50.00, "type": "expense", "description": "iFood", "category": "Alimentação"}
@@ -72,7 +91,7 @@ Você DEVE obrigatoriamente retornar um JSON válido neste formato:
 Categorias válidas: Alimentação, Transporte, Moradia, Saúde, Lazer, Educação, Vestuário, Assinaturas, Investimento, Salário, Outros.
 Use type="expense" para gastos e "income" para ganhos.
 
-Para perguntas normais ("como economizar?", "oi"), responda como um porquinho amigável em texto normal. Data de hoje: ${today}.`;
+Para perguntas normais ("como economizar?", "oi", ou relatar os gastos), responda como um porquinho amigável em texto normal.`;
 
     // 4. Call Gemini API
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${geminiKey}`;

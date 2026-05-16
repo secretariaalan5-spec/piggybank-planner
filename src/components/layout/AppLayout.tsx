@@ -8,6 +8,7 @@ const tabs = [
   { to: "/app/transactions", label: "Extrato", icon: PlusCircle },
   { to: "/app/insights", label: "Resumo", icon: BarChart2 },
   { to: "/app/chat", label: "Oink AI", icon: Bot },
+  { to: "/app/settings", label: "Ajustes", icon: Settings },
 ];
 
 export const AppLayout = ({ children }: { children?: ReactNode }) => {
