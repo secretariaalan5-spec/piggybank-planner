@@ -19,22 +19,28 @@ serve(async (req) => {
       throw new Error("Nenhuma imagem foi recebida.");
     }
 
-    // 1. Pega a chave secreta do banco de dados
+    // 1. Pega a chave secreta do banco de dados ou do Deno.env
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { data: secretsData, error: secretsError } = await supabaseAdmin
-      .from('secrets')
-      .select('value')
-      .eq('name', 'GROQ_API_KEY')
-      .single();
+    let groqKey = Deno.env.get("GROQ_API_KEY") ?? "";
 
-    if (secretsError || !secretsData) {
-      throw new Error("Chave do Groq não configurada no cofre (GROQ_API_KEY).");
+    if (!groqKey) {
+      const { data: secretsData, error: secretsError } = await supabaseAdmin
+        .from('secrets')
+        .select('value')
+        .eq('name', 'GROQ_API_KEY')
+        .single();
+
+      if (secretsData?.value) {
+        groqKey = secretsData.value;
+      }
     }
 
-    const groqKey = secretsData.value;
+    if (!groqKey) {
+      throw new Error("Chave do Groq não configurada no Supabase (GROQ_API_KEY). Adicione no cofre ou na tabela secrets.");
+    }
 
     // 2. Prepara a chamada para o Groq (Llama 3.2 90B Vision)
     // IA ultra potente, com limite gratuito massivo e raciocínio visual de ponta
