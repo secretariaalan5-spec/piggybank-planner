@@ -77,6 +77,10 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
           if (data.items && Array.isArray(data.items)) {
             const itemsText = data.items.map((i: any) => `• ${i.name}: R$ ${Number(i.price || 0).toFixed(2)} (${i.category || 'Geral'})`).join("\n");
             setNotes(`Itens do Cupom Fiscal:\n${itemsText}`);
+          } else if (data.items) {
+             setNotes(`Itens:\n${JSON.stringify(data.items, null, 2)}`);
+          } else {
+             setNotes("A IA não conseguiu identificar os itens individualmente neste recibo.");
           }
           
           toast.success("Recibo preenchido com sucesso!");
@@ -169,12 +173,15 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
             <Input value={description} onChange={e => setDescription(e.target.value)} placeholder="Ex: Mercado da semana" className="mt-1.5 h-12 rounded-xl" maxLength={120} />
           </div>
 
-          {(notes || scanning) && (
-            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-              <Label className="flex items-center gap-1.5 text-primary"><Sparkles className="w-3.5 h-3.5"/> Notas da IA (Itens)</Label>
-              <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Itens escaneados aparecerão aqui..." className="mt-1.5 min-h-[80px] rounded-xl text-sm" />
-            </div>
-          )}
+          <div>
+            <Label className="flex items-center gap-1.5 text-primary"><Sparkles className="w-3.5 h-3.5"/> Notas da IA (Itens)</Label>
+            <Textarea 
+              value={notes} 
+              onChange={e => setNotes(e.target.value)} 
+              placeholder="Itens escaneados ou observações da compra..." 
+              className="mt-1.5 min-h-[80px] rounded-xl text-sm" 
+            />
+          </div>
 
           <div>
             <Label>Conta</Label>
