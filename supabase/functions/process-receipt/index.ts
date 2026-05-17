@@ -42,7 +42,7 @@ serve(async (req) => {
       throw new Error("Chave do Groq não configurada no Supabase (GROQ_API_KEY). Adicione no cofre ou na tabela secrets.");
     }
 
-    // 2. Prepara a chamada para o Groq (Llama 3.2 90B Vision)
+    // 2. Prepara a chamada para o Groq (Llama 4 Scout 17B Multimodal)
     // IA ultra potente, com limite gratuito massivo e raciocínio visual de ponta
     const groqUrl = "https://api.groq.com/openai/v1/chat/completions";
 
@@ -72,7 +72,7 @@ Regras:
         "Content-Type": "application/json" 
       },
       body: JSON.stringify({
-        model: "llama-3.2-90b-vision-preview",
+        model: "meta-llama/llama-4-scout-17b-16e-instruct",
         messages: [
           {
             role: "user",
