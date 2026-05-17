@@ -108,8 +108,8 @@ const Dashboard = () => {
     const map = new Map<string, { name: string; value: number; color: string }>();
     inMonth.filter((t: any) => t.type === "expense").forEach((t: any) => {
       const k = t.categories?.name || "Outros";
-      const fallbackColor = CAT_COLORS[k.toLowerCase()] || PALETTE[map.size % PALETTE.length];
-      const cur = map.get(k) || { name: k, value: 0, color: t.categories?.color || fallbackColor };
+      const color = CAT_COLORS[k.toLowerCase()] || (t.categories?.color && t.categories.color !== "#10b981" ? t.categories.color : PALETTE[map.size % PALETTE.length]);
+      const cur = map.get(k) || { name: k, value: 0, color };
       cur.value += Number(t.amount);
       map.set(k, cur);
     });
@@ -205,7 +205,7 @@ const Dashboard = () => {
             <span className="text-[11px] font-bold text-primary uppercase">Oink AI</span>
           </Link>
 
-          <Link to="/app/goals" className="min-w-[140px] glass rounded-[24px] p-4 border border-dashed border-border/60 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+          <Link to="/app/goals" className="min-w-[140px] font-display rounded-[24px] p-4 border border-dashed border-border/60 flex flex-col items-center justify-center gap-2 text-muted-foreground">
             <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center"><Plus className="h-5 w-5" /></div>
             <span className="text-[11px] font-bold uppercase">Nova Meta</span>
           </Link>

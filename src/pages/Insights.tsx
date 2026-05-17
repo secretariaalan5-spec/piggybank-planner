@@ -52,8 +52,7 @@ const Insights = () => {
     const byCategory = new Map<string, { total: number, color: string }>();
     monthTx.filter((t: any) => t.type === "expense").forEach((t: any) => {
       const name = t.categories?.name || "Outros";
-      const fallbackColor = CAT_COLORS[name.toLowerCase()] || PALETTE[byCategory.size % PALETTE.length];
-      const color = t.categories?.color || fallbackColor;
+      const color = CAT_COLORS[name.toLowerCase()] || (t.categories?.color && t.categories.color !== "#10b981" ? t.categories.color : PALETTE[byCategory.size % PALETTE.length]);
       const current = byCategory.get(name) || { total: 0, color };
       byCategory.set(name, { total: current.total + Number(t.amount), color });
     });
