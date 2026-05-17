@@ -103,6 +103,22 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
           if (data.amount) setAmount(data.amount.toString().replace('.', ','));
           if (data.description) setDescription(data.description);
           if (data.date) setDate(data.date);
+          
+          // Tenta encontrar a categoria retornada pela IA na lista de categorias do usuário
+          if (data.category) {
+            const foundCat = filteredCategories.find(c => 
+              c.name.toLowerCase().includes(data.category.toLowerCase()) || 
+              data.category.toLowerCase().includes(c.name.toLowerCase())
+            );
+            if (foundCat) {
+              setCategoryId(foundCat.id);
+            } else {
+              // Fallback para "Compras" ou "Outros" se existir
+              const fallbackCat = filteredCategories.find(c => c.name.toLowerCase().includes("compras") || c.name.toLowerCase().includes("outros"));
+              if (fallbackCat) setCategoryId(fallbackCat.id);
+            }
+          }
+
           if (data.items && Array.isArray(data.items) && data.items.length > 0) {
             const itemsText = data.items.map((i: any) => `• ${i.name}: R$ ${Number(i.price || 0).toFixed(2)} (${i.category || 'Geral'})`).join("\n");
             setNotes(`Itens do Cupom Fiscal:\n${itemsText}`);

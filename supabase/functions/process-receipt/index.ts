@@ -51,6 +51,7 @@ Você é um extrator de recibos especialista em finanças pessoais. Leia a image
 Extraia os seguintes dados estruturados EXATAMENTE neste formato JSON (sem markdown, sem crases, apenas o objeto):
 {
   "description": "Nome do estabelecimento curto (ex: Padaria Santa Cruz)",
+  "category": "Compras",
   "amount": 0.00,
   "date": "YYYY-MM-DD",
   "items": [
@@ -62,7 +63,8 @@ Regras:
 2. date deve estar no formato ISO (YYYY-MM-DD). Se não encontrar a data no recibo, use a data atual.
 3. items DEVE ser uma lista exaustiva. VOCÊ É OBRIGADO a extrair TODOS os itens impressos no cupom, um por um, sem resumir e sem omitir nada. Se tiver 20 itens na foto, a lista deve ter 20 itens.
 4. O price deve ser o "Valor Total" do item (number com ponto).
-5. Não escreva NENHUM texto além do JSON válido.
+5. category deve ser a categoria geral da nota. Se for um supermercado/farmácia com itens mistos (comida, limpeza, tinta de cabelo, utilidades), use "Compras". Se for puramente restaurante/comida, use "Alimentação". Outras opções válidas: Transporte, Moradia, Saúde, Lazer, Educação, Outros.
+6. Não escreva NENHUM texto além do JSON válido.
 `;
 
     const groqResponse = await fetch(groqUrl, {
