@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Plus, Loader2, Camera, Sparkles } from "lucide-react";
 import { useCategories, useAccounts, useAddTransaction } from "@/hooks/useFinance";
@@ -167,6 +168,13 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
             <Label>Descrição (opcional)</Label>
             <Input value={description} onChange={e => setDescription(e.target.value)} placeholder="Ex: Mercado da semana" className="mt-1.5 h-12 rounded-xl" maxLength={120} />
           </div>
+
+          {(notes || scanning) && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+              <Label className="flex items-center gap-1.5 text-primary"><Sparkles className="w-3.5 h-3.5"/> Notas da IA (Itens)</Label>
+              <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Itens escaneados aparecerão aqui..." className="mt-1.5 min-h-[80px] rounded-xl text-sm" />
+            </div>
+          )}
 
           <div>
             <Label>Conta</Label>
