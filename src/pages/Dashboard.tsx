@@ -65,7 +65,7 @@ const CatCard = ({ name, value, total, color, delay }: {
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${pct}%` }}
-            transition={{ delay: key + 0.2, duration: 0.8, ease: "easeOut" }}
+            transition={{ delay: delay + 0.2, duration: 0.8, ease: "easeOut" }}
             className="h-full rounded-full"
             style={{ background: isCritical ? "#ff4d4f" : color }}
           />
