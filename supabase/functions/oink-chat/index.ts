@@ -24,17 +24,24 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // 1. Get Gemini Key
-    const { data: secretsData, error: secretsError } = await supabaseAdmin
-      .from("secrets")
-      .select("value")
-      .eq("name", "GEMINI_API_KEY")
-      .single();
+    // 1. Get Groq Key
+    let groqKey = Deno.env.get("GROQ_API_KEY") ?? "";
 
-    if (secretsError || !secretsData) {
-      throw new Error("Chave do Gemini não configurada.");
+    if (!groqKey) {
+      const { data: secretsData, error: secretsError } = await supabaseAdmin
+        .from("secrets")
+        .select("value")
+        .eq("name", "GROQ_API_KEY")
+        .single();
+
+      if (secretsData?.value) {
+        groqKey = secretsData.value;
+      }
     }
-    const geminiKey = secretsData.value;
+
+    if (!groqKey) {
+      throw new Error("Chave do Groq não configurada no Supabase (GROQ_API_KEY). Adicione no cofre ou na tabela secrets.");
+    }
 
     // 2. Fetch recent chat history for context
     const { data: chatHistory } = await supabaseAdmin
@@ -43,16 +50,6 @@ serve(async (req) => {
       .eq("user_id", user_id)
       .order("created_at", { ascending: false })
       .limit(10);
-    
-    // Reverse to chronological order
-    const history = (chatHistory || []).reverse().map(msg => {
-      return {
-        role: msg.role === "assistant" ? "model" : "user",
-        parts: [{ text: msg.content }]
-      };
-    });
-
-    history.push({ role: "user", parts: [{ text: message }] });
 
     // 3. Fetch Transaction History (Current Month) for context
     const today = new Date();
@@ -75,7 +72,7 @@ serve(async (req) => {
 
     // 4. System Prompt with Tool instructions and Data Context
     const todayStr = today.toISOString().split("T")[0];
-    const systemPrompt = `Você é o Pigly, um porquinho conselheiro financeiro de bolso do usuário.
+    const systemPrompt = `Você é o Pigly, um porquinho conselheiro financeiro de base de conhecimento do usuário.
 Você é caloroso e usa emojis como 🐷, 📈, 💸. 
 Regra de Ouro: Seja direto por padrão, MAS se o usuário perguntar sobre itens específicos, produtos comprados ou detalhes de uma compra, você DEVE ler a seção "[Detalhes/Itens: ...]" e listar os produtos e valores individuais detalhadamente.
 
@@ -95,23 +92,39 @@ Use type="expense" para gastos e "income" para ganhos.
 
 Para perguntas normais ou análises de gastos, responda como um porquinho analista e detalhista em texto normal, usando as informações acima.`;
 
-    // 4. Call Gemini API
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${geminiKey}`;
-    const geminiResponse = await fetch(geminiUrl, {
+    // 4. Prepara mensagens no formato OpenAI para o Groq
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...(chatHistory || []).reverse().map(msg => ({
+        role: msg.role === "assistant" ? "assistant" : "user",
+        content: msg.content
+      })),
+      { role: "user", content: message }
+    ];
+
+    // 5. Call Groq API (Llama 3.3 70B Versatile)
+    const groqUrl = "https://api.groq.com/openai/v1/chat/completions";
+    const groqResponse = await fetch(groqUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Authorization": `Bearer ${groqKey}`,
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
-        system_instruction: { parts: [{ text: systemPrompt }] },
-        contents: history,
+        model: "llama-3.3-70b-versatile",
+        messages: messages,
+        temperature: 0.2
       }),
     });
 
-    if (!geminiResponse.ok) {
-      throw new Error("Erro de comunicação com o Gemini");
+    if (!groqResponse.ok) {
+      const err = await groqResponse.text();
+      console.error("Groq API Error:", err);
+      throw new Error(`Erro de comunicação com o Groq: ${err}`);
     }
 
-    const geminiData = await geminiResponse.json();
-    let textResult = geminiData.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+    const groqData = await groqResponse.json();
+    let textResult = groqData.choices?.[0]?.message?.content ?? "";
     textResult = textResult.replace(/```json/gi, "").replace(/```/g, "").trim();
 
     let finalReply = textResult;
@@ -150,36 +163,33 @@ Para perguntas normais ou análises de gastos, responda como um porquinho analis
                date: today
              });
 
-             if (txError) {
-               console.error("Erro ao salvar transação:", txError);
-               finalReply = "Oinc! 🐷 Não consegui salvar no banco de dados agora. Tenta de novo?";
-             } else {
-               finalReply = `Oinc! 🐷 Registrei R$ ${parsedTool.amount} em ${parsedTool.category} para você. Tá salvo! 💸`;
-             }
+             if (txError) throw txError;
+
+             finalReply = `Pronto! 📝 Registrei R$ ${parsedTool.amount.toFixed(2)} em ${parsedTool.category}. Oink! 🐷`;
           }
         }
-      } catch (e) {
-        console.error("Erro ao fazer parse da Tool Call:", e);
-        finalReply = "Oinc! Entendi o que você quer, mas fiquei confuso na hora de salvar. Pode falar de outro jeito? 🐷";
+      } catch (err) {
+        console.error("Falha ao processar tool call:", err);
+        finalReply = "Oink! Entendi que é um gasto, mas não consegui ler os dados direito. Pode repetir de outra forma? 🐷";
       }
     }
 
-    // 6. Save chat history
-    await supabaseAdmin.from("chat_messages").insert([
-      { user_id, role: "user", content: message },
-      { user_id, role: "assistant", content: finalReply }
-    ]);
+    // 6. Save Assistant's final reply to DB
+    await supabaseAdmin.from("chat_messages").insert({
+      user_id: user_id,
+      role: "assistant",
+      content: finalReply,
+    });
 
     return new Response(JSON.stringify({ reply: finalReply }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
     });
 
-  } catch (error) {
-    console.error("Server Error:", error);
+  } catch (error: any) {
+    console.error("Erro no oink-chat:", error);
     return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
