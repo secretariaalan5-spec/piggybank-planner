@@ -37,26 +37,26 @@ serve(async (req) => {
     const geminiKey = secretsData.value;
 
     // 2. Prepara a chamada para o Gemini
-    // Usando 1.5 Pro para máxima precisão em recibos longos e leitura de QR Codes
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${geminiKey}`;
+    // Usando 1.5 Flash porque o Pro tem limite de 50 requisições/dia na conta gratuita (Erro 429)
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiKey}`;
 
     const prompt = `
-Você é um extrator de recibos especialista em finanças pessoais. Leia a imagem deste cupom fiscal ou recibo (NFC-e, SAT, etc.).
+Você é um extrator de recibos especialista em finanças pessoais. Leia a imagem deste cupom fiscal ou recibo (NFC-e, SAT, etc.) LINHA POR LINHA.
 Extraia os seguintes dados estruturados EXATAMENTE neste formato JSON (sem markdown, sem crases, apenas o objeto):
 {
   "description": "Nome do estabelecimento curto (ex: Padaria Santa Cruz)",
   "amount": 0.00,
   "date": "YYYY-MM-DD",
   "items": [
-    { "name": "Arroz 5kg", "price": 25.90, "category": "Alimentação" }
+    { "name": "BIFE ESPECIAL KG", "price": 40.71, "category": "Alimentação" }
   ]
 }
 Regras:
 1. amount deve ser o VALOR TOTAL (number), separe as casas decimais com ponto (.). Não use R$.
 2. date deve estar no formato ISO (YYYY-MM-DD). Se não encontrar a data no recibo, use a data atual.
-3. items DEVE ser uma lista exaustiva com TODOS os itens lidos no cupom fiscal. Leia com muita atenção a lista impressa. Inclua o nome do produto, o valor total do item, e a categoria sugerida.
-4. Se a imagem contiver um QR Code da SEFAZ, você pode usá-lo como contexto, mas a sua prioridade máxima é extrair os itens da lista de produtos impressa na foto.
-5. Não escreva NENHUM texto além do JSON válido. Se não conseguir ler os itens, retorne "items": [] mas tente ao máximo extrair o que der.
+3. items DEVE ser uma lista exaustiva. VOCÊ É OBRIGADO a extrair TODOS os itens impressos no cupom, um por um, sem resumir e sem omitir nada. Se tiver 20 itens na foto, a lista deve ter 20 itens.
+4. O price deve ser o "Valor Total" do item (number com ponto).
+5. Não escreva NENHUM texto além do JSON válido.
 `;
 
     const geminiResponse = await fetch(geminiUrl, {
