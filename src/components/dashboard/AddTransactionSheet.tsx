@@ -37,6 +37,7 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
   const [notes, setNotes] = useState("");
   
   const [scanning, setScanning] = useState(false);
+  const [autoCategorizing, setAutoCategorizing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredCategories = categories.filter(c => c.type === type);
@@ -50,6 +51,54 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
   if (!categoryId && filteredCategories.length > 0) {
     setCategoryId(filteredCategories[0].id);
   }
+
+  const handleAutoCategorize = async () => {
+    if (!description.trim()) {
+      toast.warning("Digite uma descrição primeiro!");
+      return;
+    }
+
+    setAutoCategorizing(true);
+    toast.info("IA analisando descrição...", { icon: <Sparkles className="h-4 w-4 text-primary" /> });
+
+    try {
+      const { data, error } = await supabase.functions.invoke('categorize-tx', {
+        body: { description, categories: filteredCategories, type }
+      });
+
+      if (error) throw new Error("Erro de conexão com a IA.");
+      if (data?.error) throw new Error(data.error);
+
+      if (!data.isNew && data.matchedCategoryId) {
+        setCategoryId(data.matchedCategoryId);
+        const matchedCat = filteredCategories.find(c => c.id === data.matchedCategoryId);
+        toast.success(`Categoria "${matchedCat?.name || 'encontrada'}" selecionada pela IA!`);
+      } else if (data.isNew && data.newCategory) {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData?.user) throw new Error("Usuário não autenticado");
+
+        const { data: newCat, error: catErr } = await supabase.from("categories").insert({
+          user_id: userData.user.id,
+          name: data.newCategory.name,
+          type: type,
+          icon: data.newCategory.icon || "ShoppingBag",
+          color: data.newCategory.color || "#ec4899",
+        }).select().single();
+
+        if (catErr || !newCat) throw new Error("Falha ao criar categoria no banco.");
+
+        qc.invalidateQueries({ queryKey: ["categories"] });
+        setCategoryId(newCat.id);
+        toast.success(`✨ Nova categoria "${newCat.name}" criada e selecionada pela IA!`);
+      } else {
+        toast.info("A IA não encontrou uma categoria exata.");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao categorizar com IA.");
+    } finally {
+      setAutoCategorizing(false);
+    }
+  };
 
   const handleScanReceipt = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -151,11 +200,11 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
             const itemsText = data.items.map((i: any) => `• ${i.name}: R$ ${Number(i.price || 0).toFixed(2)} (${i.category || 'Geral'})`).join("\n");
             setNotes(`Itens do Cupom Fiscal:\n${itemsText}`);
           } else if (data.items && data.items.length === 0) {
-             setNotes("A IA leu o recibo, mas não conseguiu listar os itens. Você pode digitá-los aqui.");
+             setNotes("A IA leu o recibo, mas não conseguiu listar os items. Você pode digitá-los aqui.");
           } else if (data.items) {
              setNotes(`Itens:\n${JSON.stringify(data.items, null, 2)}`);
           } else {
-             setNotes("A IA não conseguiu identificar os itens individualmente neste recibo.");
+             <setNotes>A IA não conseguiu identificar os itens individualmente neste recibo.</setNotes>
           }       
           
           toast.success("Recibo preenchido com sucesso!");
@@ -246,8 +295,20 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
           </div>
 
           <div>
-            <Label>Descrição (opcional)</Label>
-            <Input value={description} onChange={e => setDescription(e.target.value)} placeholder="Ex: Mercado da semana" className="mt-1.5 h-12 rounded-xl" maxLength={120} />
+            <div className="flex items-center justify-between mb-1.5">
+              <Label>Descrição (opcional)</Label>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="h-7 px-2 text-xs font-semibold text-primary hover:bg-primary/10 gap-1"
+                onClick={handleAutoCategorize}
+                disabled={autoCategorizing || !description.trim()}
+              >
+                {autoCategorizing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                {autoCategorizing ? "Analisando..." : "✨ Auto Categorizar"}
+              </Button>
+            </div>
+            <Input value={description} onChange={e => setDescription(e.target.value)} placeholder="Ex: Corte de cabelo, Mercado da semana..." className="h-12 rounded-xl" maxLength={120} />
           </div>
 
           <div>
