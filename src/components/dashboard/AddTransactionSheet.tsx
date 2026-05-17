@@ -74,14 +74,16 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
           if (data.amount) setAmount(data.amount.toString().replace('.', ','));
           if (data.description) setDescription(data.description);
           if (data.date) setDate(data.date);
-          if (data.items && Array.isArray(data.items)) {
+          if (data.items && Array.isArray(data.items) && data.items.length > 0) {
             const itemsText = data.items.map((i: any) => `• ${i.name}: R$ ${Number(i.price || 0).toFixed(2)} (${i.category || 'Geral'})`).join("\n");
             setNotes(`Itens do Cupom Fiscal:\n${itemsText}`);
+          } else if (data.items && data.items.length === 0) {
+             setNotes("A IA leu o recibo, mas não conseguiu listar os itens. Você pode digitá-los aqui.");
           } else if (data.items) {
              setNotes(`Itens:\n${JSON.stringify(data.items, null, 2)}`);
           } else {
              setNotes("A IA não conseguiu identificar os itens individualmente neste recibo.");
-          }
+          }       
           
           toast.success("Recibo preenchido com sucesso!");
         } catch (err: any) {
