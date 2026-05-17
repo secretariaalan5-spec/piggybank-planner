@@ -57,14 +57,43 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
     toast.info("Lendo cupom fiscal...", { icon: <Sparkles className="h-4 w-4 text-primary" /> });
 
     try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = async () => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      
+      img.onload = async () => {
+        URL.revokeObjectURL(objectUrl);
+        
+        // Comprimir a imagem (Reduzir para no máximo 1500px)
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 1500;
+        const MAX_HEIGHT = 1500;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        // Exportar como JPEG com compressão de 70% para ficar leve
+        const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.7);
+        const base64 = compressedDataUrl.split(",")[1];
+        
         try {
-          const base64 = (reader.result as string).split(",")[1];
-          
           const { data, error } = await supabase.functions.invoke('process-receipt', {
-            body: { imageBase64: base64, mimeType: file.type }
+            body: { imageBase64: base64, mimeType: "image/jpeg" }
           });
 
           if (error) throw new Error("Erro de conexão com o servidor de IA.");
@@ -94,6 +123,8 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
           if (fileInputRef.current) fileInputRef.current.value = "";
         }
       };
+      
+      img.src = objectUrl;
     } catch (err: any) {
       setScanning(false);
       toast.error("Erro ao acessar a câmera.");
