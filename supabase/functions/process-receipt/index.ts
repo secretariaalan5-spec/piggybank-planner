@@ -70,8 +70,7 @@ Regras:
           ]
         }],
         generationConfig: { 
-          temperature: 0.1, // Baixa temperatura = maior precisão
-          response_mime_type: "application/json" 
+          temperature: 0.1 // Baixa temperatura = maior precisão
         }
       })
     });
