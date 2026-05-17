@@ -69,7 +69,10 @@ Regras:
             { inline_data: { mime_type: mimeType || "image/jpeg", data: imageBase64 } }
           ]
         }],
-        generationConfig: { temperature: 0.1 } // Baixa temperatura = maior precisão
+        generationConfig: { 
+          temperature: 0.1, // Baixa temperatura = maior precisão
+          response_mime_type: "application/json" 
+        }
       })
     });
 
