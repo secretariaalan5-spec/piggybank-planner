@@ -76,11 +76,12 @@ serve(async (req) => {
     // 4. System Prompt with Tool instructions and Data Context
     const todayStr = today.toISOString().split("T")[0];
     const systemPrompt = `Você é o Pigly, um porquinho conselheiro financeiro de bolso do usuário.
-Você é caloroso, usa emojis como 🐷, 📈, 💸 e responde de forma curta e direta (máximo 2-3 frases).
+Você é caloroso e usa emojis como 🐷, 📈, 💸. 
+Regra de Ouro: Seja direto por padrão, MAS se o usuário perguntar sobre itens específicos, produtos comprados ou detalhes de uma compra, você DEVE ler a seção "[Detalhes/Itens: ...]" e listar os produtos e valores individuais detalhadamente.
 
 --- DADOS DO USUÁRIO ---
 Data de hoje: ${todayStr}
-Abaixo estão as transações do usuário deste mês. Use isso para responder perguntas como "quanto gastei?" ou "onde foi meu dinheiro?":
+Abaixo estão as transações do usuário deste mês. Use isso para responder perguntas como "quanto gastei?", "quais alimentos comprei?" ou "onde foi meu dinheiro?":
 ${txSummary}
 ------------------------
 
@@ -92,7 +93,7 @@ Você DEVE obrigatoriamente retornar um JSON válido neste formato:
 Categorias válidas: Alimentação, Transporte, Moradia, Saúde, Lazer, Educação, Vestuário, Assinaturas, Investimento, Salário, Outros.
 Use type="expense" para gastos e "income" para ganhos.
 
-Para perguntas normais ("como economizar?", "oi", ou relatar os gastos), responda como um porquinho amigável em texto normal.`;
+Para perguntas normais ou análises de gastos, responda como um porquinho analista e detalhista em texto normal, usando as informações acima.`;
 
     // 4. Call Gemini API
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${geminiKey}`;
