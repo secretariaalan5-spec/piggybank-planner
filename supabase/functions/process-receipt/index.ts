@@ -27,18 +27,18 @@ serve(async (req) => {
     const { data: secretsData, error: secretsError } = await supabaseAdmin
       .from('secrets')
       .select('value')
-      .eq('name', 'GEMINI_API_KEY')
+      .eq('name', 'GROQ_API_KEY')
       .single();
 
     if (secretsError || !secretsData) {
-      throw new Error("Chave do Gemini não configurada no cofre.");
+      throw new Error("Chave do Groq não configurada no cofre (GROQ_API_KEY).");
     }
 
-    const geminiKey = secretsData.value;
+    const groqKey = secretsData.value;
 
-    // 2. Prepara a chamada para o Gemini
-    // Usando 1.5 Flash porque o Pro tem limite de 50 requisições/dia na conta gratuita (Erro 429)
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiKey}`;
+    // 2. Prepara a chamada para o Groq (Llama 3.2 90B Vision)
+    // IA ultra potente, com limite gratuito massivo e raciocínio visual de ponta
+    const groqUrl = "https://api.groq.com/openai/v1/chat/completions";
 
     const prompt = `
 Você é um extrator de recibos especialista em finanças pessoais. Leia a imagem deste cupom fiscal ou recibo (NFC-e, SAT, etc.) LINHA POR LINHA.
@@ -59,30 +59,35 @@ Regras:
 5. Não escreva NENHUM texto além do JSON válido.
 `;
 
-    const geminiResponse = await fetch(geminiUrl, {
+    const groqResponse = await fetch(groqUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Authorization": `Bearer ${groqKey}`,
+        "Content-Type": "application/json" 
+      },
       body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: prompt },
-            { inline_data: { mime_type: mimeType || "image/jpeg", data: imageBase64 } }
-          ]
-        }],
-        generationConfig: { 
-          temperature: 0.1 // Baixa temperatura = maior precisão
-        }
+        model: "llama-3.2-90b-vision-preview",
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: prompt },
+              { type: "image_url", image_url: { url: `data:${mimeType || "image/jpeg"};base64,${imageBase64}` } }
+            ]
+          }
+        ],
+        temperature: 0.1
       })
     });
 
-    if (!geminiResponse.ok) {
-      const err = await geminiResponse.text();
-      console.error("Gemini API Error:", err);
-      throw new Error(`O Google Gemini rejeitou a imagem ou a chave: ${err}`);
+    if (!groqResponse.ok) {
+      const err = await groqResponse.text();
+      console.error("Groq API Error:", err);
+      throw new Error(`O Groq rejeitou a imagem ou a chave: ${err}`);
     }
 
-    const geminiData = await geminiResponse.json();
-    let textResult = geminiData.candidates[0].content.parts[0].text;
+    const groqData = await groqResponse.json();
+    let textResult = groqData.choices[0].message.content;
     
     // Limpeza de segurança (caso a IA responda com markdown ```json)
     textResult = textResult.replace(/```json/gi, '').replace(/```/g, '').trim();
