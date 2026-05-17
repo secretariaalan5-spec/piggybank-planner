@@ -60,16 +60,17 @@ serve(async (req) => {
     
     const { data: recentTxs } = await supabaseAdmin
       .from("transactions")
-      .select("amount, type, description, date, category:categories(name)")
+      .select("amount, type, description, date, notes, category:categories(name)")
       .eq("user_id", user_id)
       .gte("date", firstDay)
       .order("date", { ascending: false });
 
     let txSummary = "Nenhuma transação registrada este mês ainda.";
     if (recentTxs && recentTxs.length > 0) {
-      txSummary = recentTxs.map(t => 
-        `- ${t.date}: ${t.type === 'expense' ? 'Gasto' : 'Ganho'} de R$ ${t.amount} em ${t.category?.name || 'Outros'} (${t.description})`
-      ).join("\n");
+      txSummary = recentTxs.map(t => {
+        const base = `- ${t.date}: ${t.type === 'expense' ? 'Gasto' : 'Ganho'} de R$ ${t.amount} em ${t.category?.name || 'Outros'} (${t.description})`;
+        return t.notes ? `${base}\n  [Detalhes/Itens: ${t.notes}]` : base;
+      }).join("\n");
     }
 
     // 4. System Prompt with Tool instructions and Data Context
@@ -148,33 +149,36 @@ Para perguntas normais ("como economizar?", "oi", ou relatar os gastos), respond
                date: today
              });
 
-             if (txError) throw txError;
-
-             finalReply = `Pronto! 📝 Registrei R$ ${parsedTool.amount.toFixed(2)} em ${parsedTool.category}. Oink! 🐷`;
+             if (txError) {
+               console.error("Erro ao salvar transação:", txError);
+               finalReply = "Oinc! 🐷 Não consegui salvar no banco de dados agora. Tenta de novo?";
+             } else {
+               finalReply = `Oinc! 🐷 Registrei R$ ${parsedTool.amount} em ${parsedTool.category} para você. Tá salvo! 💸`;
+             }
           }
         }
-      } catch (err) {
-        console.error("Falha ao processar tool call:", err);
-        finalReply = "Oink! Entendi que é um gasto, mas não consegui ler os dados direito. Pode repetir de outra forma? 🐷";
+      } catch (e) {
+        console.error("Erro ao fazer parse da Tool Call:", e);
+        finalReply = "Oinc! Entendi o que você quer, mas fiquei confuso na hora de salvar. Pode falar de outro jeito? 🐷";
       }
     }
 
-    // 6. Save Assistant's final reply to DB
-    await supabaseAdmin.from("chat_messages").insert({
-      user_id: user_id,
-      role: "assistant",
-      content: finalReply,
-    });
+    // 6. Save chat history
+    await supabaseAdmin.from("chat_messages").insert([
+      { user_id, role: "user", content: message },
+      { user_id, role: "assistant", content: finalReply }
+    ]);
 
     return new Response(JSON.stringify({ reply: finalReply }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
     });
 
-  } catch (error: any) {
-    console.error("Erro no oink-chat:", error);
+  } catch (error) {
+    console.error("Server Error:", error);
     return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
     });
   }
 });
