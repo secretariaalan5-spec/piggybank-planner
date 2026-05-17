@@ -113,8 +113,12 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
             if (foundCat) {
               setCategoryId(foundCat.id);
             } else {
-              // Fallback para "Compras" ou "Outros" se existir
-              const fallbackCat = filteredCategories.find(c => c.name.toLowerCase().includes("compras") || c.name.toLowerCase().includes("outros"));
+              // Fallback para "Supermercado", "Compras" ou "Outros" se existir
+              const fallbackCat = filteredCategories.find(c => 
+                c.name.toLowerCase().includes("supermercado") || 
+                c.name.toLowerCase().includes("compras") || 
+                c.name.toLowerCase().includes("outros")
+              );
               if (fallbackCat) setCategoryId(fallbackCat.id);
             }
           }
