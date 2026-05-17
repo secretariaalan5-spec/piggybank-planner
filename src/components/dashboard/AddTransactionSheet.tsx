@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Plus, Loader2, Camera, Sparkles } from "lucide-react";
 import { useCategories, useAccounts, useAddTransaction } from "@/hooks/useFinance";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +22,7 @@ const schema = z.object({
 });
 
 export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) => {
+  const qc = useQueryClient();
   const { data: categories = [] } = useCategories();
   const { data: accounts = [] } = useAccounts();
   const addTx = useAddTransaction();
@@ -113,13 +115,35 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
             if (foundCat) {
               setCategoryId(foundCat.id);
             } else {
-              // Fallback para "Supermercado", "Compras" ou "Outros" se existir
-              const fallbackCat = filteredCategories.find(c => 
-                c.name.toLowerCase().includes("supermercado") || 
-                c.name.toLowerCase().includes("compras") || 
-                c.name.toLowerCase().includes("outros")
-              );
-              if (fallbackCat) setCategoryId(fallbackCat.id);
+              // A IA sugeriu uma categoria nova que não existe no banco! Vamos criá-la automaticamente!
+              try {
+                const { data: userData } = await supabase.auth.getUser();
+                if (userData?.user) {
+                  const { data: newCat, error: catErr } = await supabase.from("categories").insert({
+                    user_id: userData.user.id,
+                    name: data.category,
+                    type: type,
+                    icon: "ShoppingBag",
+                    color: "#f97316",
+                  }).select().single();
+
+                  if (!catErr && newCat) {
+                    qc.invalidateQueries({ queryKey: ["categories"] });
+                    setCategoryId(newCat.id);
+                    toast.success(`Nova categoria "${data.category}" criada automaticamente!`);
+                  } else {
+                    throw new Error("Falha ao criar categoria");
+                  }
+                }
+              } catch (catError) {
+                // Fallback para "Supermercado", "Compras" ou "Outros" se falhar
+                const fallbackCat = filteredCategories.find(c => 
+                  c.name.toLowerCase().includes("supermercado") || 
+                  c.name.toLowerCase().includes("compras") || 
+                  c.name.toLowerCase().includes("outros")
+                );
+                if (fallbackCat) setCategoryId(fallbackCat.id);
+              }
             }
           }
 
