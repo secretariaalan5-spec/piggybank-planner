@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTransactions, useProfile, useAccounts, useInsights } from "@/hooks/useFinance";
 import { AddTransactionSheet } from "@/components/dashboard/AddTransactionSheet";
-import { QuickMessageInput } from "@/components/dashboard/QuickMessageInput";
 import { TransactionItem } from "@/components/dashboard/TransactionItem";
 import { formatBRL } from "@/lib/format";
 import {
@@ -66,7 +65,7 @@ const CatCard = ({ name, value, total, color, delay }: {
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${pct}%` }}
-            transition={{ delay: delay + 0.2, duration: 0.8, ease: "easeOut" }}
+            transition={{ delay: key + 0.2, duration: 0.8, ease: "easeOut" }}
             className="h-full rounded-full"
             style={{ background: isCritical ? "#ff4d4f" : color }}
           />
@@ -161,57 +160,30 @@ const Dashboard = () => {
           </AnimatePresence>
         </div>
 
-        {/* Ganhos e Gastos */}
-        <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border/60">
-          <div className="glass rounded-[20px] p-4 border border-success/20 bg-success/5">
-            <div className="flex items-center gap-1.5 mb-1 text-success">
-              <TrendingUp className="h-4 w-4" />
-              <span className="text-[11px] font-bold tracking-wider uppercase">Ganhei</span>
-            </div>
-            <p className="font-display font-bold text-lg text-success tracking-tight">{v(income)}</p>
+        {/* Receita / Despesa */}
+        <div className="grid grid-cols-2 gap-3 mt-2">
+          <div className="bg-success/5 rounded-2xl p-4 border border-success/10 transition-colors">
+            <p className="text-[11px] text-success/80 font-bold uppercase tracking-wider mb-1">Ganhei</p>
+            <p className="font-display font-bold text-lg text-success">{v(income)}</p>
           </div>
-          <div className="glass rounded-[20px] p-4 border border-destructive/20 bg-destructive/5">
-            <div className="flex items-center gap-1.5 mb-1 text-destructive">
-              <TrendingDown className="h-4 w-4" />
-              <span className="text-[11px] font-bold tracking-wider uppercase">Gastei</span>
-            </div>
-            <p className="font-display font-bold text-lg text-destructive tracking-tight">{v(expense)}</p>
+          <div className="bg-destructive/5 rounded-2xl p-4 border border-destructive/10 transition-colors">
+            <p className="text-[11px] text-destructive/80 font-bold uppercase tracking-wider mb-1">Gastei</p>
+            <p className="font-display font-bold text-lg text-destructive">{v(expense)}</p>
           </div>
         </div>
       </motion.div>
 
       {/* ─── Ações Rápidas ─── */}
-      <section className="space-y-4">
-        {/* Botão de IA / Quick Message */}
-        <QuickMessageInput />
-
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none px-1">
-          <AddTransactionSheet mode="income">
-            <button className="min-w-[140px] glass rounded-[24px] p-4 border border-success/30 flex flex-col items-center justify-center gap-2 hover:bg-success/10 transition shadow-glow">
-              <div className="h-10 w-10 rounded-full bg-success/20 flex items-center justify-center text-success"><Plus className="h-5 w-5" /></div>
-              <span className="text-[11px] font-bold text-success uppercase">Receita</span>
-            </button>
-          </AddTransactionSheet>
-          
-          <AddTransactionSheet mode="expense">
-            <button className="min-w-[140px] glass rounded-[24px] p-4 border border-destructive/30 flex flex-col items-center justify-center gap-2 hover:bg-destructive/10 transition shadow-glow">
-              <div className="h-10 w-10 rounded-full bg-destructive/20 flex items-center justify-center text-destructive"><Plus className="h-5 w-5" /></div>
-              <span className="text-[11px] font-bold text-destructive uppercase">Despesa</span>
-            </button>
-          </AddTransactionSheet>
-
-          <Link to="/app/chat" className="min-w-[140px] glass rounded-[24px] p-4 border border-primary/30 flex flex-col items-center justify-center gap-2 hover:bg-primary/10 transition shadow-glow">
-            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary"><MessageSquare className="h-5 w-5" /></div>
-            <span className="text-[11px] font-bold text-primary uppercase">Oink AI</span>
-          </Link>
-
-          <Link to="/app/goals" className="min-w-[140px] font-display rounded-[24px] p-4 border border-dashed border-border/60 flex flex-col items-center justify-center gap-2 text-muted-foreground">
-            <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center"><Plus className="h-5 w-5" /></div>
-            <span className="text-[11px] font-bold uppercase">Nova Meta</span>
-          </Link>
-          {/* Implementação futura de cards de meta aqui se necessário */}
-        </div>
-      </section>
+      <div className="flex gap-3">
+        <AddTransactionSheet trigger={
+          <button 
+            onClick={() => navigator.vibrate?.(10)}
+            className="flex-1 flex items-center justify-center gap-2 h-14 gradient-primary text-primary-foreground rounded-2xl font-bold text-sm shadow-glow active:scale-95 transition-all"
+          >
+            <Plus className="h-5 w-5" /> Novo Lançamento
+          </button>
+        } />
+      </div>
 
       {/* ─── Cards: Categorias de Gasto ─── */}
       <section>
