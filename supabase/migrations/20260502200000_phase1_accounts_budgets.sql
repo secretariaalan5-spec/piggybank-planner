@@ -54,7 +54,7 @@ create policy "Users manage own budgets"
 alter table public.transactions
   add column if not exists account_id         uuid references public.accounts(id) on delete set null,
   add column if not exists source             text not null default 'manual',  -- manual|open_finance
-  add column if not exists external_id        text,
+  add column if not external_id        text,
   add column if not exists installment_total  smallint,
   add column if not exists installment_current smallint,
   add column if not exists recurrence         text,           -- monthly|weekly|yearly|null
@@ -94,7 +94,8 @@ begin
     (new.id, 'Lazer',          'Gamepad2',        '#ec4899', 'expense'),
     (new.id, 'Saúde',          'Heart',           '#ef4444', 'expense'),
     (new.id, 'Educação',       'GraduationCap',   '#6366f1', 'expense'),
-    (new.id, 'Compras',        'ShoppingBag',     '#f97316', 'expense');
+    (new.id, 'Compras',        'ShoppingBag',     '#f97316', 'expense'),
+    (new.id, 'Supermercado',   'ShoppingBag',     '#f97316', 'expense');
 
   return new;
 end;
