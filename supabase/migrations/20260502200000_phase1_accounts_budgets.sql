@@ -54,7 +54,7 @@ create policy "Users manage own budgets"
 alter table public.transactions
   add column if not exists account_id         uuid references public.accounts(id) on delete set null,
   add column if not exists source             text not null default 'manual',  -- manual|open_finance
-  add column if not external_id        text,
+  add column if not exists external_id        text,
   add column if not exists installment_total  smallint,
   add column if not exists installment_current smallint,
   add column if not exists recurrence         text,           -- monthly|weekly|yearly|null
@@ -85,17 +85,19 @@ begin
 
   -- default categories
   insert into public.categories (user_id, name, icon, color, type) values
-    (new.id, 'Salário',        'Briefcase',       '#10b981', 'income'),
-    (new.id, 'Freelance',      'Laptop',          '#14b8a6', 'income'),
-    (new.id, 'Investimentos',  'TrendingUp',      '#06b6d4', 'income'),
-    (new.id, 'Alimentação',    'UtensilsCrossed', '#f59e0b', 'expense'),
-    (new.id, 'Transporte',     'Car',             '#3b82f6', 'expense'),
-    (new.id, 'Moradia',        'Home',            '#8b5cf6', 'expense'),
-    (new.id, 'Lazer',          'Gamepad2',        '#ec4899', 'expense'),
-    (new.id, 'Saúde',          'Heart',           '#ef4444', 'expense'),
-    (new.id, 'Educação',       'GraduationCap',   '#6366f1', 'expense'),
-    (new.id, 'Compras',        'ShoppingBag',     '#f97316', 'expense'),
-    (new.id, 'Supermercado',   'ShoppingBag',     '#f97316', 'expense');
+    (new.id, 'Salário',           'Briefcase',       '#10b981', 'income'),
+    (new.id, 'Freelance',         'Laptop',          '#14b8a6', 'income'),
+    (new.id, 'Investimentos',     'TrendingUp',      '#06b6d4', 'income'),
+    (new.id, 'Alimentação',       'UtensilsCrossed', '#f59e0b', 'expense'),
+    (new.id, 'Transporte',        'Car',             '#3b82f6', 'expense'),
+    (new.id, 'Moradia',           'Home',            '#8b5cf6', 'expense'),
+    (new.id, 'Lazer',             'Gamepad2',        '#ec4899', 'expense'),
+    (new.id, 'Saúde',             'Heart',           '#ef4444', 'expense'),
+    (new.id, 'Educação',          'GraduationCap',   '#6366f1', 'expense'),
+    (new.id, 'Compras',           'ShoppingBag',     '#f97316', 'expense'),
+    (new.id, 'Supermercado',      'ShoppingBag',     '#f97316', 'expense'),
+    (new.id, 'Cuidados Pessoais', 'Scissors',        '#ec4899', 'expense'),
+    (new.id, 'Outros',            'MoreHorizontal',  '#64748b', 'expense');
 
   return new;
 end;
