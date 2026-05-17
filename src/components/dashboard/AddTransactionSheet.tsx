@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,54 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredCategories = categories.filter(c => c.type === type);
+
+  // Auto-injetar categorias que possam estar faltando para usuários antigos
+  useEffect(() => {
+    const checkAndInjectCategories = async () => {
+      if (categories.length === 0) return;
+
+      const hasCuidados = categories.some(c => c.name.toLowerCase() === "cuidados pessoais");
+      const hasOutros = categories.some(c => c.name.toLowerCase() === "outros");
+
+      if (hasCuidados && hasOutros) return;
+
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        if (!userData?.user) return;
+
+        const missing = [];
+        if (!hasCuidados) {
+          missing.push({
+            user_id: userData.user.id,
+            name: "Cuidados Pessoais",
+            icon: "Scissors",
+            color: "#ec4899",
+            type: "expense"
+          });
+        }
+        if (!hasOutros) {
+          missing.push({
+            user_id: userData.user.id,
+            name: "Outros",
+            icon: "MoreHorizontal",
+            color: "#64748b",
+            type: "expense"
+          });
+        }
+
+        if (missing.length > 0) {
+          const { error } = await supabase.from("categories").insert(missing);
+          if (!error) {
+            qc.invalidateQueries({ queryKey: ["categories"] });
+          }
+        }
+      } catch (err) {
+        // silent catch
+      }
+    };
+
+    checkAndInjectCategories();
+  }, [categories, qc]);
 
   // Set default account if not selected and accounts exist
   if (!accountId && accounts.length > 0) {
@@ -130,7 +178,7 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
             const itemsText = data.items.map((i: any) => `• ${i.name}: R$ ${Number(i.price || 0).toFixed(2)} (${i.category || 'Geral'})`).join("\n");
             setNotes(`Itens do Cupom Fiscal:\n${itemsText}`);
           } else if (data.items && data.items.length === 0) {
-             setNotes("A IA leu o recibo, mas não conseguiu listar os itens. Você pode digitá-los aqui.");
+             setNotes("A IA leu o recibo, mas não conseguiu listar os itens. Você pode digitá-los assim que desejar.");
           } else if (data.items) {
              setNotes(`Itens:\n${JSON.stringify(data.items, null, 2)}`);
           } else {
