@@ -37,10 +37,11 @@ serve(async (req) => {
     const geminiKey = secretsData.value;
 
     // 2. Prepara a chamada para o Gemini
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${geminiKey}`;
+    // Usando 1.5 Pro para máxima precisão em recibos longos e leitura de QR Codes
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${geminiKey}`;
 
     const prompt = `
-Você é um extrator de recibos especialista em finanças pessoais. Leia a imagem deste cupom fiscal ou recibo.
+Você é um extrator de recibos especialista em finanças pessoais. Leia a imagem deste cupom fiscal ou recibo (NFC-e, SAT, etc.).
 Extraia os seguintes dados estruturados EXATAMENTE neste formato JSON (sem markdown, sem crases, apenas o objeto):
 {
   "description": "Nome do estabelecimento curto (ex: Padaria Santa Cruz)",
@@ -53,8 +54,9 @@ Extraia os seguintes dados estruturados EXATAMENTE neste formato JSON (sem markd
 Regras:
 1. amount deve ser o VALOR TOTAL (number), separe as casas decimais com ponto (.). Não use R$.
 2. date deve estar no formato ISO (YYYY-MM-DD). Se não encontrar a data no recibo, use a data atual.
-3. items deve ser uma lista com todos os itens do cupom fiscal, incluindo o nome do produto, o valor unitário/total do item, e a categoria sugerida (ex: Alimentação, Higiene, Limpeza, Bebidas, Eletrônicos, Lazer, etc.).
-4. Não escreva NENHUM texto além do JSON válido.
+3. items DEVE ser uma lista exaustiva com TODOS os itens lidos no cupom fiscal. Leia com muita atenção a lista impressa. Inclua o nome do produto, o valor total do item, e a categoria sugerida.
+4. Se a imagem contiver um QR Code da SEFAZ, você pode usá-lo como contexto, mas a sua prioridade máxima é extrair os itens da lista de produtos impressa na foto.
+5. Não escreva NENHUM texto além do JSON válido. Se não conseguir ler os itens, retorne "items": [] mas tente ao máximo extrair o que der.
 `;
 
     const geminiResponse = await fetch(geminiUrl, {
