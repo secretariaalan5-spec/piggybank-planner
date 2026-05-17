@@ -31,6 +31,7 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
   const [accountId, setAccountId] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [installments, setInstallments] = useState("1");
+  const [notes, setNotes] = useState("");
   
   const [scanning, setScanning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -72,6 +73,10 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
           if (data.amount) setAmount(data.amount.toString().replace('.', ','));
           if (data.description) setDescription(data.description);
           if (data.date) setDate(data.date);
+          if (data.items && Array.isArray(data.items)) {
+            const itemsText = data.items.map((i: any) => `• ${i.name}: R$ ${Number(i.price || 0).toFixed(2)} (${i.category || 'Geral'})`).join("\n");
+            setNotes(`Itens do Cupom Fiscal:\n${itemsText}`);
+          }
           
           toast.success("Recibo preenchido com sucesso!");
         } catch (err: any) {
@@ -100,9 +105,9 @@ export const AddTransactionSheet = ({ trigger }: { trigger?: React.ReactNode }) 
     });
     if (!parsed.success) { toast.error(parsed.error.errors[0].message); return; }
 
-    await addTx.mutateAsync(parsed.data);
+    await addTx.mutateAsync({ ...parsed.data, notes: notes || undefined });
     setOpen(false);
-    setAmount(""); setDescription(""); setCategoryId(""); setInstallments("1");
+    setAmount(""); setDescription(""); setCategoryId(""); setInstallments("1"); setNotes("");
   };
 
   return (

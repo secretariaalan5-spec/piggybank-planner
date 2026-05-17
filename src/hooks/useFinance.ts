@@ -56,6 +56,7 @@ export const useAddTransaction = () => {
             installment_group_id: groupId,
             installment_total: payload.installment_total,
             installment_current: i + 1,
+            notes: payload.notes ?? null,
             source: "manual",
           };
         });
@@ -109,6 +110,19 @@ export const useCategories = () =>
       const { data, error } = await supabase.from("categories").select("*").order("name");
       if (error) throw error;
       return data ?? [];
+    },
+  });
+
+// ── Profile ───────────────────────────────────────────────────
+export const useProfile = () =>
+  useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      const { data, error } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      if (error) throw error;
+      return data;
     },
   });
 
@@ -219,36 +233,57 @@ export const useGoals = () =>
   useQuery({
     queryKey: ["goals"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("goals")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("goals").select("*").order("created_at");
       if (error) throw error;
       return data ?? [];
     },
   });
+
+export const useAddGoal = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: {
+      name: string;
+      target_amount: number;
+      current_amount?: number;
+      deadline?: string;
+      color?: string;
+      icon?: string;
+    }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      const { error } = await supabase.from("goals").insert({
+        user_id: user.id,
+        name: payload.name,
+        target_amount: payload.target_amount,
+        current_amount: payload.current_amount ?? 0,
+        deadline: payload.deadline ?? null,
+        color: payload.color ?? "#3b82f6",
+        icon: payload.icon ?? "Target",
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["goals"] });
+      toast.success("Meta adicionada!");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+};
 
 // ── Insights ──────────────────────────────────────────────────
 export const useInsights = () =>
   useQuery({
     queryKey: ["insights"],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
       const { data, error } = await supabase
         .from("ai_insights")
         .select("*")
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
-    },
-  });
-
-// ── Profile ───────────────────────────────────────────────────
-export const useProfile = () =>
-  useQuery({
-    queryKey: ["profile"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("*").maybeSingle();
-      if (error) throw error;
-      return data;
     },
   });

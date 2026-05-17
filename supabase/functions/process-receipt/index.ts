@@ -40,17 +40,21 @@ serve(async (req) => {
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${geminiKey}`;
 
     const prompt = `
-Você é um extrator de recibos. Leia a imagem deste cupom fiscal ou recibo.
+Você é um extrator de recibos especialista em finanças pessoais. Leia a imagem deste cupom fiscal ou recibo.
 Extraia os seguintes dados estruturados EXATAMENTE neste formato JSON (sem markdown, sem crases, apenas o objeto):
 {
   "description": "Nome do estabelecimento curto (ex: Padaria Santa Cruz)",
   "amount": 0.00,
-  "date": "YYYY-MM-DD"
+  "date": "YYYY-MM-DD",
+  "items": [
+    { "name": "Arroz 5kg", "price": 25.90, "category": "Alimentação" }
+  ]
 }
 Regras:
 1. amount deve ser o VALOR TOTAL (number), separe as casas decimais com ponto (.). Não use R$.
-2. date deve estar no formato ISO. Se não encontrar a data no recibo, use a data atual.
-3. Não escreva NENHUM texto além do JSON válido.
+2. date deve estar no formato ISO (YYYY-MM-DD). Se não encontrar a data no recibo, use a data atual.
+3. items deve ser uma lista com todos os itens do cupom fiscal, incluindo o nome do produto, o valor unitário/total do item, e a categoria sugerida (ex: Alimentação, Higiene, Limpeza, Bebidas, Eletrônicos, Lazer, etc.).
+4. Não escreva NENHUM texto além do JSON válido.
 `;
 
     const geminiResponse = await fetch(geminiUrl, {
