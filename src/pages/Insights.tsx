@@ -8,6 +8,21 @@ import { Sparkles, TrendingDown, TrendingUp, AlertTriangle, CheckCircle2 } from 
 import { motion } from "framer-motion";
 import { formatBRL } from "@/lib/format";
 
+const CAT_COLORS: Record<string, string> = {
+  alimentação: "#f59e0b", // Amber
+  transporte: "#3b82f6",  // Blue
+  moradia: "#8b5cf6",     // Purple
+  saúde: "#ec4899",       // Pink
+  assinaturas: "#06b6d4", // Cyan
+  lazer: "#10b981",       // Emerald
+  educação: "#6366f1",    // Indigo
+  mercado: "#14b8a6",     // Teal
+  compras: "#f43f5e",     // Rose
+  outros: "#64748b",      // Slate
+};
+
+const PALETTE = ["#f59e0b", "#3b82f6", "#8b5cf6", "#ec4899", "#06b6d4", "#10b981", "#6366f1", "#14b8a6", "#f43f5e"];
+
 const Insights = () => {
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -33,11 +48,12 @@ const Insights = () => {
     const spentPercent = income > 0 ? Math.min(Math.round((expenses / income) * 100), 100) : (expenses > 0 ? 100 : 0);
     const overspent = income > 0 && expenses > income;
 
-    // Agrupa por categoria
+    // Agrupa por categoria com paleta rica
     const byCategory = new Map<string, { total: number, color: string }>();
     monthTx.filter((t: any) => t.type === "expense").forEach((t: any) => {
       const name = t.categories?.name || "Outros";
-      const color = t.categories?.color || "#cbd5e1";
+      const fallbackColor = CAT_COLORS[name.toLowerCase()] || PALETTE[byCategory.size % PALETTE.length];
+      const color = t.categories?.color || fallbackColor;
       const current = byCategory.get(name) || { total: 0, color };
       byCategory.set(name, { total: current.total + Number(t.amount), color });
     });
@@ -76,7 +92,7 @@ const Insights = () => {
           <PiggyMascot size={110} />
         </div>
         
-        <div className="relative pr-28">
+        <div className="relative pr-24">
           <div className="flex items-center gap-2 mb-4">
             <div className={`h-8 w-8 rounded-full flex items-center justify-center ${stats.overspent ? 'bg-destructive/20 text-destructive' : stats.spentPercent > 80 ? 'bg-amber-500/20 text-amber-500' : 'bg-success/20 text-success'}`}>
               {stats.overspent ? <AlertTriangle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}

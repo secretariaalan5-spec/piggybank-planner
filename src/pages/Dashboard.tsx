@@ -1,72 +1,122 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  PiggyBank, Eye, EyeOff, Bell, Plus, ArrowLeftRight
-} from "lucide-react";
-import { useTransactions, useProfile, useCategories } from "@/hooks/useFinance";
-import { formatBRL } from "@/lib/format";
+import { useTransactions, useProfile, useAccounts, useInsights } from "@/hooks/useFinance";
 import { AddTransactionSheet } from "@/components/dashboard/AddTransactionSheet";
 import { QuickMessageInput } from "@/components/dashboard/QuickMessageInput";
-import { Link } from "react-router-dom";
+import { TransactionItem } from "@/components/dashboard/TransactionItem";
+import { formatBRL } from "@/lib/format";
+import {
+  Bell, Eye, EyeOff, ChevronLeft, ChevronRight, TrendingUp, TrendingDown,
+  Wallet, Plus, MessageSquare, ArrowRight, Sparkles, Target,
+  PiggyBank, ShoppingCart, Coffee, Car, Home, Zap, ArrowLeftRight
+} from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
-const CatCard = ({ name, value, total, color, delay }: any) => {
+const MONTHS = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const MONTHS_FULL = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+
+const CAT_ICONS: Record<string, React.ElementType> = {
+  alimentação: Coffee, transporte: Car, moradia: Home,
+  saúde: Zap, assinaturas: Zap, mercado: ShoppingCart,
+  compras: ShoppingCart, lazer: Target, outros: ShoppingCart,
+};
+
+const CAT_COLORS: Record<string, string> = {
+  alimentação: "#f59e0b", // Amber
+  transporte: "#3b82f6",  // Blue
+  moradia: "#8b5cf6",     // Purple
+  saúde: "#ec4899",       // Pink
+  assinaturas: "#06b6d4", // Cyan
+  lazer: "#10b981",       // Emerald
+  educação: "#6366f1",    // Indigo
+  mercado: "#14b8a6",     // Teal
+  compras: "#f43f5e",     // Rose
+  outros: "#64748b",      // Slate
+};
+
+const PALETTE = ["#f59e0b", "#3b82f6", "#8b5cf6", "#ec4899", "#06b6d4", "#10b981", "#6366f1", "#14b8a6", "#f43f5e"];
+
+// ── Card de Categoria ──────────────────────────────────────────────────────────
+const CatCard = ({ name, value, total, color, delay }: {
+  name: string; value: number; total: number; color: string; delay: number;
+}) => {
+  const Icon = CAT_ICONS[name.toLowerCase()] ?? ShoppingCart;
   const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+  
+  // Lógica simplificada para "nível crítico" apenas visual
+  const isCritical = pct > 40; 
+  
   return (
-    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay }}
-      className="glass border border-border/60 rounded-[24px] p-4 shadow-sm flex flex-col justify-between aspect-[1.1/1]">
-      <div>
-        <div className="h-2 w-full bg-muted rounded-full overflow-hidden mb-3">
-          <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1, delay }}
-            className="h-full rounded-full" style={{ backgroundColor: color }} />
-        </div>
-        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{name}</p>
-        <p className="text-[15px] font-bold text-foreground mt-1 tabular-nums">{formatBRL(value)}</p>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay, duration: 0.35 }}
+      className="glass rounded-[20px] p-4 border border-border/60 shadow-card flex flex-col gap-3"
+    >
+      <div className="h-11 w-11 rounded-full flex items-center justify-center mb-1" style={{ background: color + "22" }}>
+        <Icon className="h-5 w-5" style={{ color }} strokeWidth={2.5} />
       </div>
-      <p className="text-[10px] font-bold text-muted-foreground/60">{pct}% do total</p>
+      <div>
+        <p className="text-[13px] text-muted-foreground font-medium truncate mb-1">{name}</p>
+        <p className="font-display font-bold text-[22px] tracking-tight text-foreground">{formatBRL(value)}</p>
+      </div>
+      <div className="mt-2">
+        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden mb-2">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${pct}%` }}
+            transition={{ delay: delay + 0.2, duration: 0.8, ease: "easeOut" }}
+            className="h-full rounded-full"
+            style={{ background: isCritical ? "#ff4d4f" : color }}
+          />
+        </div>
+        <p className={`text-[11px] font-medium ${isCritical ? 'text-red-500' : 'text-muted-foreground'}`}>
+          {isCritical ? "Nível crítico" : `${pct}% do total`}
+        </p>
+      </div>
     </motion.div>
   );
 };
 
+// ── Dashboard ──────────────────────────────────────────────────────────────────
 const Dashboard = () => {
-  const { data: profile } = useProfile();
-  const { data: transactions = [] } = useTransactions();
-  const { data: categories = [] } = useCategories();
+  const [month, setMonth] = useState(new Date().getMonth());
+  const [year, setYear] = useState(new Date().getFullYear());
   const [hidden, setHidden] = useState(false);
 
-  const now = new Date();
-  const month = now.getMonth();
-  const year = now.getFullYear();
+  const { data: profile } = useProfile();
+  const { data: accounts = [] } = useAccounts();
+  const { data: transactions = [] } = useTransactions();
+  const { data: insights = [] } = useInsights();
 
-  const inMonth = useMemo(() => transactions.filter((t: any) => {
-    const d = new Date(t.date);
-    return d.getMonth() === month && d.getFullYear() === year;
-  }), [transactions, month, year]);
-
-  const { income, expense, balance } = useMemo(() => {
-    let inc = 0, exp = 0;
-    inMonth.forEach((t: any) => {
-      if (t.type === 'income') inc += Number(t.amount);
-      else exp += Math.abs(Number(t.amount));
+  // Filtra transações do mês selecionado
+  const inMonth = useMemo(() => {
+    return transactions.filter((t: any) => {
+      if (!t.date) return false;
+      const [y, m] = t.date.split('-');
+      return parseInt(m, 10) - 1 === month && parseInt(y, 10) === year;
     });
-    return { income: inc, expense: exp, balance: inc - exp };
+  }, [transactions, month, year]);
+
+  const income = useMemo(() => inMonth.filter((t: any) => t.type === "income").reduce((s: number, t: any) => s + Number(t.amount), 0), [inMonth]);
+  const expense = useMemo(() => inMonth.filter((t: any) => t.type === "expense").reduce((s: number, t: any) => s + Number(t.amount), 0), [inMonth]);
+  const balance = income - expense;
+
+  // Agrupa por categoria com paleta rica
+  const catSlices = useMemo(() => {
+    const map = new Map<string, { name: string; value: number; color: string }>();
+    inMonth.filter((t: any) => t.type === "expense").forEach((t: any) => {
+      const k = t.categories?.name || "Outros";
+      const fallbackColor = CAT_COLORS[k.toLowerCase()] || PALETTE[map.size % PALETTE.length];
+      const cur = map.get(k) || { name: k, value: 0, color: t.categories?.color || fallbackColor };
+      cur.value += Number(t.amount);
+      map.set(k, cur);
+    });
+    return Array.from(map.values()).sort((a, b) => b.value - a.value);
   }, [inMonth]);
 
-  const catSlices = useMemo(() => {
-    const map: Record<string, number> = {};
-    inMonth.filter((t: any) => t.type === 'expense').forEach((t: any) => {
-      const catName = categories.find(c => c.id === t.category_id)?.name || "Outros";
-      map[catName] = (map[catName] || 0) + Math.abs(Number(t.amount));
-    });
-    return Object.entries(map)
-      .map(([name, value]) => ({ 
-        name, 
-        value, 
-        color: categories.find(c => c.name === name)?.color || "#cbd5e1" 
-      }))
-      .sort((a, b) => b.value - a.value);
-  }, [inMonth, categories]);
-
-  const v = (val: number) => hidden ? "R$ •••" : formatBRL(val);
+  const v = (n: number) => hidden ? "R$ ••••" : formatBRL(n);
 
   return (
     <div className="px-5 pt-6 pb-32 space-y-8 bg-background min-h-screen">
@@ -111,41 +161,50 @@ const Dashboard = () => {
           </AnimatePresence>
         </div>
 
-        {/* Receita / Despesa */}
-        <div className="grid grid-cols-2 gap-3 mt-2">
-          <div className="bg-success/5 rounded-2xl p-4 border border-success/10 transition-colors">
-            <p className="text-[11px] text-success/80 font-bold uppercase tracking-wider mb-1">Ganhei</p>
-            <p className="font-display font-bold text-lg text-success">{v(income)}</p>
+        {/* Ganhos e Gastos */}
+        <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border/60">
+          <div className="glass rounded-[20px] p-4 border border-success/20 bg-success/5">
+            <div className="flex items-center gap-1.5 mb-1 text-success">
+              <TrendingUp className="h-4 w-4" />
+              <span className="text-[11px] font-bold tracking-wider uppercase">Ganhei</span>
+            </div>
+            <p className="font-display font-bold text-lg text-success tracking-tight">{v(income)}</p>
           </div>
-          <div className="bg-destructive/5 rounded-2xl p-4 border border-destructive/10 transition-colors">
-            <p className="text-[11px] text-destructive/80 font-bold uppercase tracking-wider mb-1">Gastei</p>
-            <p className="font-display font-bold text-lg text-destructive">{v(expense)}</p>
+          <div className="glass rounded-[20px] p-4 border border-destructive/20 bg-destructive/5">
+            <div className="flex items-center gap-1.5 mb-1 text-destructive">
+              <TrendingDown className="h-4 w-4" />
+              <span className="text-[11px] font-bold tracking-wider uppercase">Gastei</span>
+            </div>
+            <p className="font-display font-bold text-lg text-destructive tracking-tight">{v(expense)}</p>
           </div>
         </div>
       </motion.div>
 
-      {/* ─── Oink AI: Entrada Mágica ─── */}
-      <QuickMessageInput />
-
       {/* ─── Ações Rápidas ─── */}
-      <div className="flex gap-3">
-        <AddTransactionSheet trigger={
-          <button 
-            onClick={() => navigator.vibrate?.(10)}
-            className="flex-1 flex items-center justify-center gap-2 h-14 gradient-primary text-primary-foreground rounded-2xl font-bold text-sm shadow-glow active:scale-95 transition-all"
-          >
-            <Plus className="h-5 w-5" /> Novo Lançamento
-          </button>
-        } />
-      </div>
+      <section className="space-y-4">
+        {/* Botão de IA / Quick Message */}
+        <QuickMessageInput />
 
-      {/* ─── Seção de Metas ─── */}
-      <section>
-        <div className="flex items-center justify-between mb-4 px-1">
-          <h2 className="font-display text-[19px] font-bold text-foreground">Suas Metas</h2>
-          <Link to="/app/goals" className="text-[13px] text-primary font-bold">Ver Metas</Link>
-        </div>
-        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-5 px-5">
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none px-1">
+          <AddTransactionSheet mode="income">
+            <button className="min-w-[140px] glass rounded-[24px] p-4 border border-success/30 flex flex-col items-center justify-center gap-2 hover:bg-success/10 transition shadow-glow">
+              <div className="h-10 w-10 rounded-full bg-success/20 flex items-center justify-center text-success"><Plus className="h-5 w-5" /></div>
+              <span className="text-[11px] font-bold text-success uppercase">Receita</span>
+            </button>
+          </AddTransactionSheet>
+          
+          <AddTransactionSheet mode="expense">
+            <button className="min-w-[140px] glass rounded-[24px] p-4 border border-destructive/30 flex flex-col items-center justify-center gap-2 hover:bg-destructive/10 transition shadow-glow">
+              <div className="h-10 w-10 rounded-full bg-destructive/20 flex items-center justify-center text-destructive"><Plus className="h-5 w-5" /></div>
+              <span className="text-[11px] font-bold text-destructive uppercase">Despesa</span>
+            </button>
+          </AddTransactionSheet>
+
+          <Link to="/app/chat" className="min-w-[140px] glass rounded-[24px] p-4 border border-primary/30 flex flex-col items-center justify-center gap-2 hover:bg-primary/10 transition shadow-glow">
+            <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary"><MessageSquare className="h-5 w-5" /></div>
+            <span className="text-[11px] font-bold text-primary uppercase">Oink AI</span>
+          </Link>
+
           <Link to="/app/goals" className="min-w-[140px] glass rounded-[24px] p-4 border border-dashed border-border/60 flex flex-col items-center justify-center gap-2 text-muted-foreground">
             <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center"><Plus className="h-5 w-5" /></div>
             <span className="text-[11px] font-bold uppercase">Nova Meta</span>
@@ -205,6 +264,7 @@ const Dashboard = () => {
           )}
         </div>
       </section>
+
     </div>
   );
 };
