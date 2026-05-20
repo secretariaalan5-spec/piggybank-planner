@@ -13,9 +13,10 @@ interface Props {
   account?: { name: string; type: string } | null;
   installment_total?: number | null;
   installment_current?: number | null;
+  metodo_pagamento?: string | null;
 }
 
-export const TransactionItem = ({ id, description, amount, type, date, category, account, installment_total, installment_current }: Props) => {
+export const TransactionItem = ({ id, description, amount, type, date, category, account, installment_total, installment_current, metodo_pagamento }: Props) => {
   const Icon = (Icons as any)[category?.icon || "Wallet"] ?? Icons.Wallet;
   const sign = type === "income" ? "+" : "−";
   const tone = type === "income" ? "text-success" : "text-foreground";
@@ -53,14 +54,37 @@ export const TransactionItem = ({ id, description, amount, type, date, category,
             <div className="flex items-center gap-2">
               <p className="font-medium text-sm truncate">{description?.split(' (')[0] || category?.name || "Lançamento"}</p>
               {isParcel && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 bg-muted text-muted-foreground rounded-md uppercase tracking-tighter">
+                <span className="text-[9px] font-bold px-1.5 py-0.5 bg-purple-500/20 text-purple-400 rounded-md uppercase tracking-tighter">
                   {installment_current}/{installment_total}
                 </span>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {category?.name} {account ? `· ${account.name}` : ""} · {formatDate(date)}
-            </p>
+            <div className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap mt-0.5">
+              <span>{category?.name}</span>
+              {account && (
+                <>
+                  <span className="opacity-40">•</span>
+                  <span className="truncate max-w-[80px]">{account.name}</span>
+                </>
+              )}
+              {metodo_pagamento && (
+                <>
+                  <span className="opacity-40">•</span>
+                  <span className={`px-1.5 py-0.25 text-[9px] rounded font-semibold tracking-wide uppercase ${
+                    metodo_pagamento === "credito" ? "bg-purple-500/10 text-purple-400 border border-purple-500/20" :
+                    metodo_pagamento === "debito" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
+                    metodo_pagamento === "pix" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
+                    "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                  }`}>
+                    {metodo_pagamento === "credito" ? "Crédito" :
+                     metodo_pagamento === "debito" ? "Débito" :
+                     metodo_pagamento === "pix" ? "Pix" : "Espécie"}
+                  </span>
+                </>
+              )}
+              <span className="opacity-40">•</span>
+              <span>{formatDate(date)}</span>
+            </div>
           </div>
           <p className={`font-display font-bold text-sm tabular-nums ${tone}`}>{sign}{formatBRL(Math.abs(amount))}</p>
         </div>
