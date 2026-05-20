@@ -57,7 +57,7 @@ function AddAccountSheet() {
       balance: parseFloat(balance || "0"),
       credit_limit: type === "credit" ? parseFloat(limit || "0") : undefined,
       color,
-      icon: ACCOUNT_TYPES.find(t => t.value === type)?.icon.displayName ?? "Wallet",
+      icon: type === "checking" ? "Building2" : type === "savings" ? "PiggyBank" : type === "credit" ? "CreditCard" : type === "cash" ? "Banknote" : type === "investment" ? "TrendingUp" : "Wallet",
     });
     setOpen(false);
     setName(""); setBalance(""); setLimit(""); setType("checking");
