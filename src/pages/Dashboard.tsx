@@ -214,22 +214,21 @@ const Dashboard = () => {
           <Link to="/app/transactions" className="text-[13px] text-primary font-bold">Ver Tudo</Link>
         </div>
         
-        <div className="space-y-4">
+        <div className="divide-y divide-border/30">
           {inMonth.slice(0, 3).map((t: any) => (
-            <div key={t.id} className="flex items-center justify-between">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="h-10 w-10 rounded-xl bg-muted/50 flex items-center justify-center shrink-0">
-                  <ArrowLeftRight className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate">{t.description}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold">{new Date(t.date).toLocaleDateString('pt-BR')}</p>
-                </div>
-              </div>
-              <p className={`text-sm font-bold tabular-nums shrink-0 ${t.type === 'income' ? 'text-success' : 'text-foreground'}`}>
-                {t.type === 'income' ? '+' : '-'} {formatBRL(Math.abs(t.amount))}
-              </p>
-            </div>
+            <TransactionItem 
+              key={t.id}
+              id={t.id}
+              description={t.description} 
+              amount={Number(t.amount)} 
+              type={t.type} 
+              date={t.date} 
+              category={t.categories} 
+              account={t.accounts} 
+              installment_total={t.installment_total}
+              installment_current={t.installment_current}
+              metodo_pagamento={t.metodo_pagamento}
+            />
           ))}
           {inMonth.length === 0 && (
             <p className="text-center text-muted-foreground text-sm py-4 italic">Nenhuma atividade</p>
