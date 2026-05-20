@@ -72,6 +72,7 @@ const Transactions = () => {
                       account={t.accounts} 
                       installment_total={t.installment_total}
                       installment_current={t.installment_current}
+                      metodo_pagamento={t.metodo_pagamento}
                     />
                   </li>
                 ))}
