@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -243,6 +243,38 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goals: {
         Row: {
           color: string
@@ -288,6 +320,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          phone: string | null
           theme: string
           updated_at: string
         }
@@ -296,6 +329,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          phone?: string | null
           theme?: string
           updated_at?: string
         }
@@ -304,8 +338,27 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          phone?: string | null
           theme?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      secrets: {
+        Row: {
+          created_at: string | null
+          name: string
+          value: string
+        }
+        Insert: {
+          created_at?: string | null
+          name: string
+          value: string
+        }
+        Update: {
+          created_at?: string | null
+          name?: string
+          value?: string
         }
         Relationships: []
       }
@@ -321,7 +374,9 @@ export type Database = {
           external_id: string | null
           id: string
           installment_current: number | null
+          installment_group_id: string | null
           installment_total: number | null
+          metodo_pagamento: string | null
           notes: string | null
           parent_id: string | null
           recurrence: string | null
@@ -341,7 +396,9 @@ export type Database = {
           external_id?: string | null
           id?: string
           installment_current?: number | null
+          installment_group_id?: string | null
           installment_total?: number | null
+          metodo_pagamento?: string | null
           notes?: string | null
           parent_id?: string | null
           recurrence?: string | null
@@ -361,7 +418,9 @@ export type Database = {
           external_id?: string | null
           id?: string
           installment_current?: number | null
+          installment_group_id?: string | null
           installment_total?: number | null
+          metodo_pagamento?: string | null
           notes?: string | null
           parent_id?: string | null
           recurrence?: string | null
@@ -541,4 +600,3 @@ export const Constants = {
     },
   },
 } as const
-
