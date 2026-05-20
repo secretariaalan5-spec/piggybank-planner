@@ -33,6 +33,7 @@ export const useAddTransaction = () => {
       installment_current?: number;
       recurrence?: string;
       notes?: string;
+      metodo_pagamento?: string;
     }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
@@ -57,6 +58,7 @@ export const useAddTransaction = () => {
             installment_total: payload.installment_total,
             installment_current: i + 1,
             notes: payload.notes ?? null,
+            metodo_pagamento: payload.metodo_pagamento ?? null,
             source: "manual",
           };
         });
@@ -73,6 +75,7 @@ export const useAddTransaction = () => {
           date: payload.date ?? new Date().toISOString().split("T")[0],
           recurrence: payload.recurrence ?? null,
           notes: payload.notes ?? null,
+          metodo_pagamento: payload.metodo_pagamento ?? null,
           source: "manual",
         });
         if (error) throw error;
@@ -254,7 +257,7 @@ export const useAddGoal = () => {
       if (!user) throw new Error("Not authenticated");
       const { error } = await supabase.from("goals").insert({
         user_id: user.id,
-        name: payload.name,
+        title: payload.name,
         target_amount: payload.target_amount,
         current_amount: payload.current_amount ?? 0,
         deadline: payload.deadline ?? null,
